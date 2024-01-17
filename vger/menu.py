@@ -17,6 +17,8 @@ class Menu:
                                inquirer.Text("secret", message="What is the secret token or password?")]
             answers = inquirer.prompt(login_questions)
             self.server = answers["server"]
+            if self.server[-1] != "/":
+                self.server += "/"
             self.secret = answers["secret"]
             try:
                 self.connection = Connection(self.server, self.secret)
@@ -27,7 +29,9 @@ class Menu:
     def pick_target(self):
         session_info = dict()
         for s in self.sessions:
-            session_info[f"{self.connection.jpy_sessions[s]['path']} Last Active: {self.connection.jpy_sessions[s]['kernel']['last_activity']}"] = s
+            name = self.connection.jpy_sessions[s]['name']
+            last_active = f"Last Active: {self.connection.jpy_sessions[s]['kernel']['last_activity']}"
+            session_info[f"{name:<20} {last_active:<30}"] = s
         select_kernel = [inquirer.List("kernel", message="Which notebook would you like to attach to?", choices=session_info.keys())]
         answer = inquirer.prompt(select_kernel)
         self.target = session_info[answer["kernel"]]
