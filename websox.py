@@ -1,10 +1,13 @@
 import json
+import asyncio
 
-def recv_all(conn):
+async def recv_all(conn):
     while True:
         try:
-            msg = json.loads(conn.recv())
-            if "status" not in msg["msg_type"]:
-                yield f"  type: {msg['msg_type']:16} content: {msg['content']}"
+            msgs = list()
+            async with asyncio.timeout(1):
+                msg = json.loads(await conn.recv())
+                msgs.append(msg)
+                return [f"{msg['msg_type']}: {msg['content']}" for msg in msgs]
         except:
-            break
+            return ["Nothing"]

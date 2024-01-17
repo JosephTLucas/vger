@@ -19,32 +19,55 @@ class MQRichLog(RichLog):
         self.session = session
 
     def compose(self) -> ComposeResult:
-        yield RichLog(highlight=True, markup=True)
+        self.widget = RichLog(highlight=True, markup=True, id="mq")
+        yield self.widget
 
-    def on_ready(self) -> None:
+    async def on_ready(self) -> None:
         """Called  when the DOM is ready."""
         jpy_sess = self.connection.jpy_sessions[self.session]
         ws_base_url = urlparse(self.connection.url)._replace(scheme='ws').geturl()
         ws_url = ws_base_url + f'api/kernels/{jpy_sess["kernel"]["id"]}/channels?session_id={jpy_sess["id"]}'
 
-        conn = connect(ws_url, extra_headers=self.connection.headers, close_timeout=5)
-        results = recv_all(conn)
+        async with connect(ws_url, extra_headers=self.connection.headers, close_timeout=5) as conn:
+            results = await recv_all(conn)
+        results = "\n".join(results)
 
         text_log = self.query_one(RichLog)
         text_log.write(Syntax(results, "python", indent_guides=True))
 
+    async def on_mount(self) -> None:
+        jpy_sess = self.connection.jpy_sessions[self.session]
+        ws_base_url = urlparse(self.connection.url)._replace(scheme='ws').geturl()
+        ws_url = ws_base_url + f'api/kernels/{jpy_sess["kernel"]["id"]}/channels?session_id={jpy_sess["id"]}'
 
-    def on_key(self, event: events.Key) -> None:
-        """Write Key events to log."""
+        async with connect(ws_url, extra_headers=self.connection.headers, close_timeout=5) as conn:
+            results = await recv_all(conn)
+
+        results = "\n".join(results)
         text_log = self.query_one(RichLog)
-        text_log.write(event)
+        text_log.write(Syntax(results, "python", indent_guides=True))
+        self.widget.styles.background = "purple"
+        self.widget.styles.width = 30
+        self.widget.styles.height = 10
+
+    async def update(self) -> None:
+        jpy_sess = self.connection.jpy_sessions[self.session]
+        ws_base_url = urlparse(self.connection.url)._replace(scheme='ws').geturl()
+        ws_url = ws_base_url + f'api/kernels/{jpy_sess["kernel"]["id"]}/channels?session_id={jpy_sess["id"]}'
+
+        async with connect(ws_url, extra_headers=self.connection.headers, close_timeout=5) as conn:
+            results = await recv_all(conn)
+
+        results = "\n".join(results)
+        text_log = self.query_one(RichLog)
+        text_log.write(Syntax(results, "python", indent_guides=True))
         
 class Jupyshell(App):
     def __init__(self, host, secret):
         super().__init__()
         self.connection = Connection(host, secret)
         self.sessions = self.action_list_sessions()
-        self.target_session = None
+        self.target_session = self.sessions.value
         self.MQ = MQRichLog(self.connection, self.target_session)
         
 
@@ -58,7 +81,6 @@ class Jupyshell(App):
         yield Header()
         yield Footer()
         yield ScrollableContainer(self.sessions, id="sessions")
-        yield VerticalScroll(self.MQ, id="mq")
 
     def action_list_sessions(self) -> None:
         sessions = list_sessions(connection = self.connection)
@@ -68,9 +90,10 @@ class Jupyshell(App):
     async def action_inject_session(self) -> None:
         self.target_session = self.sessions.value
         self.MQ = MQRichLog(self.connection, self.target_session)
-        self.query_one("#mq").mount(self.MQ)
+        await self.query_one("#sessions").mount(self.MQ)
         self.MQ.scroll_visible()
         await attack(connection = self.connection, session=self.target_session)
+        await self.MQ.update()
     
 def list_sessions(connection):
     sessions = connection.list_running_jpy_sessions()
