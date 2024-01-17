@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "vger"
+version = "0.0.1"
+description = "An execution framework for Jupyter environments."
+authors = ["Joseph Lucas <joe@joetl.com>"]
+license = "GPL-3.0-only"
+readme = "README.md"
+
+packages = [
+    { include = "vger" }
+]
+
+[tool.poetry.scripts]
+vger = 'vger.menu:cli'
+
+[tool.poetry.dependencies]
+python = "^3.11"
+inquirer = "^3.2"
+rich = "^13.7"
+urllib3 = "^2.1"
+websockets = "^12.0"
+requests = "^2.30"
+
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
