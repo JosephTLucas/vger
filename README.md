@@ -1,6 +1,6 @@
 # V'ger
 
-![](static/banner.png)
+![](static/vger.jpg)
 
 _"…On its journey back, it amassed so much knowledge, it achieved consciousness itself. It became a living thing."_
 
