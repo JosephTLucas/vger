@@ -6,6 +6,10 @@ _"…On its journey back, it amassed so much knowledge, it achieved consciousnes
 
 V'ger is an interactive command-line application for interacting with authenticated Jupyter instances.
 
+## Usage
+
+![](static/usage.gif)
+
 ## Initial Setup
 
 Upon opening the application, users will be prompted for connection information.
