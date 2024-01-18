@@ -25,7 +25,8 @@ If prompt returns back to `hostname`, either the connection failed or there were
 Once a connection is established, users can execute a variety of commands.
 
 - **Reset**: Configure a different host.
+- **Switch Notebooks**: Select a different notebook to target.
 - **Inject**: Execute code in the context of the selected notebook. Code can be provided in a text editor or by specifying a local `.py` file. Either input is processed as a string and executed in runtime of the notebook. Output will be transparent to other notebook users by specifying `Noisy` or `Stealthy` when prompted. This selection will also dictate how much information is returned to the user about their execution.
 - **Backdoor**: Launch a new JupyterLab instance open to `0.0.0.0`, with `allow-root` on a user-specified `port` with a user-specified `password`.
 - **Check History**: See ipython commands recently run in the target notebook.
-- **Switch Notebooks**: Select a different notebook to target.
+- **Run shell command**: Spawn a terminal, run the command, return the output, and delete the terminal.

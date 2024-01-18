@@ -17,7 +17,7 @@ class Connection:
 
     def get(self, path="api/contents"):
         return self.session.get(self.url + path).json()
-    
+
     def post(self, path="api/contents"):
         return self.session.post(self.url + path).json()
 
@@ -27,14 +27,14 @@ class Connection:
             self.jpy_sessions[jpy_sess["id"]] = jpy_sess
             sessions.append(jpy_sess["id"])
         return sessions
-    
+
     def list_running_jpy_terminals(self):
         terminals = list()
         for jpy_term in self.get("api/terminals"):
             self.jpy_terminals[jpy_term["name"]] = jpy_term["last_activity"]
             terminals.append(jpy_term["name"])
         return terminals
-    
+
     def create_terminal(self):
         new_term = self.post("api/terminals")
         self.jpy_terminals[new_term["name"]] = new_term["last_activity"]
@@ -42,6 +42,7 @@ class Connection:
 
     def delete_terminal(self, terminal):
         self.session.delete(self.url + f"api/terminals/{terminal}")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Connect to target")
