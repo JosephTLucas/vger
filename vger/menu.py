@@ -2,6 +2,8 @@ from vger.connection import Connection
 import inquirer
 from vger.attack import attack_session, run_ephemeral_terminal
 import asyncio
+import json
+import base64
 
 
 class Menu:
@@ -66,6 +68,9 @@ class Menu:
                         "Backdoor",
                         "Check History",
                         "Run shell command",
+                        "List dir or get file",
+                        "Upload file",
+                        "Delete file",
                     ],
                 )
             ]
@@ -81,6 +86,12 @@ class Menu:
                     self.switch_target_notebook()
                 case "Run shell command":
                     self.run_in_shell()
+                case "List dir or get file":
+                    self.list_dir()
+                case "Upload file":
+                    self.upload()
+                case "Delete file":
+                    self.delete()
         self.__init__()
         self.main()
 
@@ -166,13 +177,67 @@ class Menu:
             run_ephemeral_terminal(self.connection, answers["code"])
         )
 
+    def list_dir(self):
+        dir = [
+            inquirer.Text(
+                "dir",
+                "What directory would you like to list (relative to the Jupyter directory)? You can also use this to read plaintext files.",
+                default="/",
+            )
+        ]
+        answers = inquirer.prompt(dir)
+        results = self.connection.list_dir(answers["dir"])
+        self.connection.con.print_json(json.dumps(results))
+
+    def upload(self):
+        payload = [
+            inquirer.Path(
+                "path",
+                "What file do you want to upload? ",
+                path_type=inquirer.Path.FILE,
+            )
+        ]
+        answer = inquirer.prompt(payload)
+        file_path = answer["path"].split("? ")[-1]
+        with open(file_path, "rb") as f:
+            payload = f.read()
+            payload = base64.b64encode(payload).decode("utf-8")
+        target = [
+            inquirer.Text("path", "Where do you want to place the file?", default="/")
+        ]
+        answer = inquirer.prompt(target)
+        data = {
+            "content": payload,
+            "format": "base64",
+            "path": answer["path"],
+            "type": "file",
+        }
+        self.connection.con.print(
+            self.connection.upload(answer["path"], json.dumps(data))
+        )
+
+    def delete(self):
+        target = [inquirer.Text("path", "What file do you want to delete?")]
+        answer = inquirer.prompt(target)
+        response = self.connection.delete(answer["path"])
+        if response.status_code == 204:
+            self.connection.con.print(f"{answer["path"]} deleted successfully")
+        else:
+            self.connection.con.print(f"Error deleting {answer["path"]}")
+
     def main(self):
         self.login()
         answer = [
             inquirer.List(
                 "option",
                 message="Connect to user session or run shell command?",
-                choices=["User session", "Run shell command"],
+                choices=[
+                    "User session",
+                    "Run shell command",
+                    "List dir or plaintext file",
+                    "Upload file",
+                    "Delete file",
+                ],
             )
         ]
         answer = inquirer.prompt(answer)
@@ -182,6 +247,15 @@ class Menu:
                 self.execute_op()
             case "Run shell command":
                 self.run_in_shell()
+                self.main()
+            case "List dir or get file":
+                self.list_dir()
+                self.main()
+            case "Upload file":
+                self.upload()
+                self.main()
+            case "Delete file":
+                self.delete()
                 self.main()
 
 

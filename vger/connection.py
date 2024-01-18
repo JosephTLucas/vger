@@ -2,6 +2,7 @@ import requests
 from rich.console import Console
 import argparse
 import json
+import urllib.parse
 
 
 class Connection:
@@ -43,11 +44,28 @@ class Connection:
     def delete_terminal(self, terminal):
         self.session.delete(self.url + f"api/terminals/{terminal}")
 
+    def list_dir(self, path):
+        try:
+            return self.get(f"api/contents/{urllib.parse.quote(path)}")
+        except requests.exceptions.JSONDecodeError:
+            return {"Result": "Invalid Path"}
+
+    def upload(self, path, data):
+        return self.session.put(
+            self.url + f"api/contents/{urllib.parse.quote(path)}", data=data
+        ).json()
+
+    def delete(self, path):
+        return self.session.delete(
+            self.url + f"api/contents/{urllib.parse.quote(path)}"
+        )
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Connect to target")
     parser.add_argument("socket", type=str, help="Target socket as http://host:port/")
     parser.add_argument("secret", type=str, help="Token or password")
+    parser.add_argument("path", type=str, help="list path")
     args = parser.parse_args()
     c = Connection(args.socket, args.secret)
-    print(c.create_terminal())
+    print(c.list_dir(args.path))
