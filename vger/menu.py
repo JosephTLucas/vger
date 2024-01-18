@@ -1,6 +1,6 @@
 from vger.connection import Connection
 import inquirer
-from vger.attack import attack_session
+from vger.attack import attack_session, run_ephemeral_terminal
 import asyncio
 
 class Menu:
@@ -40,16 +40,19 @@ class Menu:
         answer = dict()
         answer["option"] = None
         while answer["option"] != "Reset":
-            nav_menu = [inquirer.List("option", message="What would you like to do?", choices=["Reset", "Inject", "Backdoor", "Check History", "Switch Notebooks"])]
+            nav_menu = [inquirer.List("option", message="What would you like to do?", choices=["Reset", "Switch Notebooks", "Inject", "Backdoor", "Check History", "Run in shell"])]
             answer = inquirer.prompt(nav_menu)
-            if answer["option"] == "Inject":
-                self.inject()
-            elif answer["option"] == "Backdoor":
-                self.jupyter_backdoor()
-            elif answer["option"] == "Check History":
-                self.dump_history()
-            elif answer["option"] == "Switch Notebooks":
-                self.switch_target_notebook()
+            match answer["option"]:
+                case "Inject":
+                    self.inject()
+                case "Backdoor":
+                    self.jupyter_backdoor()
+                case "Check History":
+                    self.dump_history()
+                case "Switch Notebooks":
+                    self.switch_target_notebook()
+                case "Run in shell":
+                    self.run_in_shell()
         self.__init__()
         self.main()
 
@@ -107,6 +110,11 @@ class Menu:
     def switch_target_notebook(self):
         self.pick_target()
         self.execute_op()
+
+    def run_in_shell(self):
+        code = inquirer.editor("What code would you like to inject?")
+        loop = asyncio.new_event_loop()
+        loop.run_until_complete(run_ephemeral_terminal(self.connection, code))
 
 def cli():
     m = Menu()

