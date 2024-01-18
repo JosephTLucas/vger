@@ -30,3 +30,6 @@ Once a connection is established, users can execute a variety of commands.
 - **Backdoor**: Launch a new JupyterLab instance open to `0.0.0.0`, with `allow-root` on a user-specified `port` with a user-specified `password`.
 - **Check History**: See ipython commands recently run in the target notebook.
 - **Run shell command**: Spawn a terminal, run the command, return the output, and delete the terminal.
+- **List dir or get file**: List directories relative to the Jupyter directory. If you don't know, start with `/`.
+- **Upload file**: Upload file from localhost to the target. Specify paths in the same format as List dir (relative to the Jupyter directory). Provide a full path including filename and extension.
+- **Delete file**: Delete a file. Specify paths in the same format as List dir (relative to the Jupyter directory).
