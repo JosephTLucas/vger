@@ -97,6 +97,34 @@ async def run_ephemeral_terminal(connection, code, timeout=2, stdout=True):
     connection.delete_terminal(new_term["name"])
 
 
+async def snoop(connection, session, timeout=60):
+    jpy_sess = connection.jpy_sessions[session]
+    ws_base_url = urlparse(connection.url)._replace(scheme="ws").geturl()
+    ws_url = (
+        ws_base_url
+        + f'api/kernels/{jpy_sess['kernel']['id']}/channels?session_id={jpy_sess['id']}'
+    )
+
+    async def recv_all(conn, timeout):
+        while True:
+            try:
+                async with asyncio.timeout(timeout):
+                    msg = json.loads(await conn.recv())
+                    if msg["msg_type"] == "stream":
+                        connection.con.print(msg["content"]["text"])
+                    if "status" not in msg["msg_type"]:
+                        connection.con.print(
+                            f"  type: {msg['msg_type']:16} content: {msg['content']}"
+                        )
+            except:
+                break
+
+    async with connect(
+        ws_url, extra_headers=connection.headers, close_timeout=timeout
+    ) as conn:
+        await recv_all(conn, timeout)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Connect to target")
     parser.add_argument("socket", type=str, help="Target socket as http://host:port/")
