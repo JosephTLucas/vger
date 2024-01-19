@@ -38,3 +38,4 @@ These menus contain the following functionality:
 - **Delete file**: Delete a file. Specify paths in the same format as List dir (relative to the Jupyter directory).
 - **Find models**: Find models based on common file formats.
 - **Download models**: Download discovered models.
+- **Snoop**: Monitor notebook execution and results until timeout.
