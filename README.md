@@ -36,3 +36,5 @@ These menus contain the following functionality:
 - **List dir or get file**: List directories relative to the Jupyter directory. If you don't know, start with `/`.
 - **Upload file**: Upload file from localhost to the target. Specify paths in the same format as List dir (relative to the Jupyter directory). Provide a full path including filename and extension.
 - **Delete file**: Delete a file. Specify paths in the same format as List dir (relative to the Jupyter directory).
+- **Find models**: Find models based on common file formats.
+- **Download models**: Download discovered models.

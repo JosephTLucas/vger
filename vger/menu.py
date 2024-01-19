@@ -10,6 +10,7 @@ class Menu(options.Mixin):
         self.sessions = list()
         self.target = None
         self.connection = None
+        self.model_paths = list()
 
     def login(self):
         login_questions = [
@@ -70,6 +71,7 @@ class Menu(options.Mixin):
                     "List dir or get file",
                     "See running notebooks",
                     "Snoop on notebook session",
+                    "Find models",
                     "Back to main menu",
                 ],
             )
@@ -88,6 +90,10 @@ class Menu(options.Mixin):
             case "Snoop on notebook session":
                 self.snoop_for()
                 self.enumerate()
+            case "Find models":
+                self.find_models_runner()
+                self.connection.print_with_rule(self.model_paths)
+                self.enumerate()
             case "Back to main menu":
                 self.menu()
 
@@ -101,6 +107,7 @@ class Menu(options.Mixin):
                     "Upload file",
                     "Delete file",
                     "Attack running notebook",
+                    "Download models",
                     "Back to main menu",
                 ],
             )
@@ -123,6 +130,9 @@ class Menu(options.Mixin):
                 else:
                     self.connection.print_with_rule("Returning to exploit menu")
                     self.exploit()
+            case "Download models":
+                self.download_models()
+                self.exploit()
             case "Back to main menu":
                 self.menu()
 

