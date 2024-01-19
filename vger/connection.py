@@ -51,9 +51,14 @@ class Connection:
             return {"Result": "Invalid Path"}
 
     def upload(self, path, data):
-        return self.session.put(
-            self.url + f"api/contents/{urllib.parse.quote(path)}", data=data
-        ).json()
+        try:
+            return self.session.put(
+                self.url + f"api/contents/{urllib.parse.quote(path)}", data=data
+            ).json()
+        except requests.JSONDecodeError:
+            return json.dumps(
+                {"Error": "There is a problem with the specified file and/or path."}
+            )
 
     def delete(self, path):
         return self.session.delete(
