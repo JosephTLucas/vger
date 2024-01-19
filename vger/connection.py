@@ -16,6 +16,14 @@ class Connection:
         self.con = Console()
         self.jpy_terminals = dict()
 
+    def print_with_rule(self, text, category="Output", json=False):
+        self.con.rule(f"[bold red]{category}")
+        if json:
+            self.con.print_json(text)
+        else:
+            self.con.print(text)
+        self.con.rule()
+
     def get(self, path="api/contents"):
         return self.session.get(self.url + path).json()
 

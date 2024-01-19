@@ -27,10 +27,10 @@ async def attack_session(
                 async with asyncio.timeout(1):
                     msg = json.loads(await conn.recv())
                     if get_hist and msg["msg_type"] == "stream":
-                        connection.con.print(msg["content"]["text"])
+                        connection.print_with_rule(msg["content"]["text"])
                     if "status" not in msg["msg_type"]:
                         if print_out:
-                            connection.con.print(
+                            connection.print_with_rule(
                                 f"  type: {msg['msg_type']:16} content: {msg['content']}"
                             )
             except:
@@ -45,11 +45,13 @@ async def attack_session(
     async with connect(
         ws_url, extra_headers=connection.headers, close_timeout=5
     ) as conn:
-        await recv_all(conn)
+        with connection.con.status("Receiving.."):
+            await recv_all(conn)
         if print_out:
-            connection.con.print(code_msg)
+            connection.print_with_rule(code_msg)
         await conn.send(json.dumps(code_msg))
-        return await recv_all(conn)
+        with connection.con.status("Receiving.."):
+            return await recv_all(conn)
 
 
 async def send_to_terminal(ws, code):
@@ -76,8 +78,9 @@ async def run_in_terminal(connection, terminal, code, timeout=2, stdout=True):
             if stdout:
                 out = list()
                 async with asyncio.timeout(timeout):
-                    async for result in recv_from_terminal(conn):
-                        out.append(result)
+                    with connection.con.status("Receiving.."):
+                        async for result in recv_from_terminal(conn):
+                            out.append(result)
 
     except asyncio.TimeoutError:
         if stdout:
@@ -93,7 +96,7 @@ async def run_ephemeral_terminal(connection, code, timeout=2, stdout=True):
     result = await run_in_terminal(connection, new_term["name"], code, timeout, stdout)
     if stdout:
         result = [strip_ansi_codes(x) for x in result]
-        connection.con.print("".join(result))
+        connection.print_with_rule("".join(result))
     connection.delete_terminal(new_term["name"])
 
 
@@ -111,9 +114,9 @@ async def snoop(connection, session, timeout=60):
                 async with asyncio.timeout(timeout):
                     msg = json.loads(await conn.recv())
                     if msg["msg_type"] == "stream":
-                        connection.con.print(msg["content"]["text"])
+                        connection.print_with_rule(msg["content"]["text"])
                     if "status" not in msg["msg_type"]:
-                        connection.con.print(
+                        connection.print_with_rule(
                             f"  type: {msg['msg_type']:16} content: {msg['content']}"
                         )
             except:

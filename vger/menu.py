@@ -121,7 +121,7 @@ class Menu(options.Mixin):
                 if session_count:
                     self.exploit_attack()
                 else:
-                    self.connection.con.print("Returning to exploit menu")
+                    self.connection.print_with_rule("Returning to exploit menu")
                     self.exploit()
             case "Back to main menu":
                 self.menu()
