@@ -110,7 +110,8 @@ class Menu(options.Mixin):
                 self.enumerate()
             case "Find models":
                 self.find_models_runner()
-                self.connection.print_with_rule(self.model_paths)
+                if len(self.model_paths) > 0:
+                    self.connection.print_with_rule("\n".join(self.model_paths))
                 self.enumerate()
             case "Back to main menu":
                 self.menu()

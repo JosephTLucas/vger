@@ -5,6 +5,7 @@ import json
 import urllib.parse
 from rich.panel import Panel
 from typing import Dict
+import rich
 
 
 class Connection:
@@ -19,10 +20,15 @@ class Connection:
         self.jpy_terminals: Dict = dict()
 
     def print_with_rule(self, text, category="Output", json=False):
+        self.con.rule("[bold red]Results")
         if json:
             self.con.print_json(text)
         else:
-            self.con.print(Panel(text, title=category, subtitle=category))
+            try:
+                self.con.print(text)
+            except rich.errors.MarkupError:
+                print(text)
+        self.con.rule("[bold red]Results")
 
     def get(self, path="api/contents"):
         return self.session.get(self.url + path).json()

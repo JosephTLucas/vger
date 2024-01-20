@@ -365,6 +365,6 @@ class Mixin:
             )
         ]
         answer = inquirer.prompt(answer)
-        self.connection.con.save_text(
-            f"{answer["path"]}vger-{time.strftime("%Y%m%d-%H%M%S")}.log"
-        )
+        log_path = f"{answer["path"]}vger-{time.strftime("%Y%m%d-%H%M%S")}.log"
+        self.connection.con.save_text(log_path)
+        self.connection.print_with_rule(f"Log saved to {log_path}")
