@@ -22,11 +22,13 @@ If prompt returns back to `hostname`, either the connection failed or there were
 
 Once a connection is established, users drop into a nested set of menus.
 
-The top level menu is **REEP**:
+The top level menu is:
 - **Reset**: Configure a different host.
 - **Enumerate**: Utilities to learn more about the host.
 - **Exploit**: Utilities to perform direct action and manipulation of the host and artifacts.
 - **Persist**: Utilities to establish persistence mechanisms.
+- **Export**: Save output to a text file.
+- **Quit**: No one likes quitters.
 
 These menus contain the following functionality:
 - **Inject**: Execute code in the context of the selected notebook. Code can be provided in a text editor or by specifying a local `.py` file. Either input is processed as a string and executed in runtime of the notebook. Output will be transparent to other notebook users by specifying `Noisy` or `Stealthy` when prompted. This selection will also dictate how much information is returned to the user about their execution.

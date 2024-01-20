@@ -3,6 +3,7 @@ import asyncio
 from vger.attack import attack_session, run_ephemeral_terminal, snoop
 import json
 import base64
+import time
 
 
 class Mixin:
@@ -156,7 +157,8 @@ class Mixin:
         ]
         answers = inquirer.prompt(dir)
         results = self.connection.list_dir(answers["dir"])
-        self.connection.print_with_rule(json.dumps(results), json=True)
+        with self.connection.con.pager():
+            self.connection.print_with_rule(json.dumps(results), json=True)
 
     def upload(self):
         payload = [
@@ -307,3 +309,16 @@ class Mixin:
                         base64.b64decode(self.connection.list_dir(model)["content"])
                     )
                 self.connection.print_with_rule(f"{model_name} downloaded to {path}")
+
+    def export_console(self):
+        answer = [
+            inquirer.Path(
+                "path",
+                message="What directory would you like to save your output?",
+                path_type=inquirer.Path.DIRECTORY,
+            )
+        ]
+        answer = inquirer.prompt(answer)
+        self.connection.con.save_text(
+            f"{answer["path"]}vger-{time.strftime("%Y%m%d-%H%M%S")}.log"
+        )

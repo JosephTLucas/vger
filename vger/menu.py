@@ -34,6 +34,16 @@ class Menu(options.Mixin):
             self.login()
 
     def menu(self):
+        self.connection.print_with_rule(
+            """
+ @@@  @@@  @@  @@@@@@@  @@@@@@@@ @@@@@@@ 
+ @@!  @@@ !@  !@@       @@!      @@!  @@@
+ @!@  !@!     !@! @!@!@ @!!!:!   @!@!!@! 
+  !: .:!      :!!   !!: !!:      !!: :!! 
+    ::         :: :: :  : :: :::  :   : :
+              """,
+            category="V'ger",
+        )
         nav_menu = [
             inquirer.List(
                 "option",
@@ -43,6 +53,8 @@ class Menu(options.Mixin):
                     "Enumerate",
                     "Exploit",
                     "Persist",
+                    "Export output",
+                    "Quit",
                 ],
             )
         ]
@@ -60,6 +72,11 @@ class Menu(options.Mixin):
             case "Persist":
                 self.persist()
                 self.menu()
+            case "Export output":
+                self.export_console()
+                self.menu()
+            case "Quit":
+                exit()
 
     def enumerate(self):
         enumerate_menu = [

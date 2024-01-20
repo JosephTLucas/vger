@@ -3,6 +3,7 @@ from rich.console import Console
 import argparse
 import json
 import urllib.parse
+from rich.panel import Panel
 
 
 class Connection:
@@ -13,16 +14,16 @@ class Connection:
         self.session = requests.Session()
         self.session.headers.update(self.headers)
         self.jpy_sessions = dict()
-        self.con = Console()
+        self.con = Console(record=True)
         self.jpy_terminals = dict()
 
     def print_with_rule(self, text, category="Output", json=False):
-        self.con.rule(f"[bold red]{category}")
+        # self.con.rule(f"[bold red]{category}")
         if json:
             self.con.print_json(text)
         else:
-            self.con.print(text)
-        self.con.rule()
+            self.con.print(Panel(text, title=category, subtitle=category))
+        # self.con.rule()
 
     def get(self, path="api/contents"):
         return self.session.get(self.url + path).json()
