@@ -253,61 +253,55 @@ class Mixin:
                     snoop(self.connection, self.target, timeout=int(answer["seconds"]))
                 )
 
-    def find_models(
+    def find_files(
         self,
+        file_extensions,
+        tracker,
         path="/",
-        file_extensions=[
-            "pkl",
-            "pickle",
-            "pt",
-            "pth",
-            "onnx",
-            "safetensors",
-            "h5",
-            "npy",
-            "npz",
-            "joblib",
-            "pb",
-            "protobuf",
-        ],
     ):
         """
-        Search for models based on known file extensions.
+        Search for files based on known file extensions.
         """
         try:
             for file in self.connection.list_dir(path)["content"]:
                 if file["type"] == "directory":
-                    self.find_models(file["path"], file_extensions)
+                    self.find_files(file_extensions, tracker, file["path"])
                 elif (
                     file["type"] == "file"
                     and file["name"].split(".")[-1] in file_extensions
                 ):
                     self.connection.print_with_rule(f"Found {file["path"]}")
-                    self.model_paths.append(file["path"])
-                    self.model_paths = list(set(self.model_paths))
+                    tracker.append(file["path"])
                 else:
                     pass
         except KeyError:
             pass
 
-    def find_models_runner(self):
+    def find_files_runner(self, file_type="model"):
         """
-        find_models() is recursive, this manages the loop.
+        find_files() is recursive, this manages the loop.
         """
-        file_extensions = [
-            "pkl",
-            "pickle",
-            "pt",
-            "pth",
-            "onnx",
-            "safetensors",
-            "h5",
-            "npy",
-            "npz",
-            "joblib",
-            "pb",
-            "protobuf",
-        ]
+        if file_type == "model":
+            file_extensions = [
+                "pkl",
+                "pickle",
+                "pt",
+                "pth",
+                "onnx",
+                "safetensors",
+                "h5",
+                "npy",
+                "npz",
+                "joblib",
+                "pb",
+                "protobuf",
+                "zip",
+                "bin",
+            ]
+            tracker = self.model_paths
+        elif file_type == "data":
+            file_extensions = ["csv", "json", "jsonl", "parquet", "avro"]
+            tracker = self.datasets
         answer = [
             inquirer.Text(
                 "path", "What path would you like to recursively search?", default="/"
@@ -318,40 +312,37 @@ class Mixin:
                 choices=file_extensions,
             ),
         ]
-
         answer = inquirer.prompt(answer)
         with self.connection.con.status("Searching..."):
-            self.find_models(answer["path"], answer["extensions"])
+            self.find_files(answer["extensions"], tracker, answer["path"])
 
-    def download_models(self):
+    def download_files(self, tracker):
         """
-        Download discovered models.
+        Download discovered artifacts.
         """
-        if len(self.model_paths) == 0:
+        if len(tracker) == 0:
             self.connection.print_with_rule(
-                f"You need to find some models first.\nTry Enumerate -> Find Models"
+                f"You need to find some artifacts first.\nTry Enumerate -> Find [artifact]"
             )
             self.exploit()
         else:
             answer = [
                 inquirer.Path(
                     "path",
-                    message="What directory would you like to download the models to?",
+                    message="What directory would you like to download to?",
                     path_type=inquirer.Path.DIRECTORY,
                 ),
-                inquirer.Checkbox(
-                    "models", "What models do you want?", choices=self.model_paths
-                ),
+                inquirer.Checkbox("artifacts", "What do you want?", choices=tracker),
             ]
             answer = inquirer.prompt(answer)
             path = answer["path"].split("? ")[-1]
-            for model in answer["models"]:
-                model_name = model.split("/")[-1]
-                with open(f"{path + model_name}", "wb") as f:
+            for artifact in answer["artifacts"]:
+                name = artifact.split("/")[-1]
+                with open(f"{path + name}", "wb") as f:
                     f.write(
-                        base64.b64decode(self.connection.list_dir(model)["content"])
+                        base64.b64decode(self.connection.list_dir(artifact)["content"])
                     )
-                self.connection.print_with_rule(f"{model_name} downloaded to {path}")
+                self.connection.print_with_rule(f"{name} downloaded to {path}")
 
     def export_console(self):
         """

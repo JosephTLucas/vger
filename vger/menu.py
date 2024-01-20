@@ -12,6 +12,7 @@ class Menu(options.Mixin):
         self.target: str = None
         self.connection: Connection = None
         self.model_paths: List[str] = list()
+        self.datasets: List[str] = list()
 
     def login(self):
         login_questions = [
@@ -37,11 +38,19 @@ class Menu(options.Mixin):
     def menu(self):
         self.connection.print_with_rule(
             """
- @@@  @@@  @@  @@@@@@@  @@@@@@@@ @@@@@@@ 
- @@!  @@@ !@  !@@       @@!      @@!  @@@
- @!@  !@!     !@! @!@!@ @!!!:!   @!@!!@! 
-  !: .:!      :!!   !!: !!:      !!: :!! 
-    ::         :: :: :  : :: :::  :   : :
+             .                      ,;           
+             EK,        .Gt       f#i j.         
+             .j;       j#W:     .E#t  EW,        
+  t      .DD.        ;K#f      i#W,   E##j       
+  EK:   ,WK.       .G#D.      L#D.    E###D.     
+  E#t  i#D        j#K;      :K#Wfff;  E#jG#W;    
+  E#t j#f       ,K#f   ,GD; i##WLLLLt E#t t##f   
+  E#tL#i         j#Wi   E#t  .E#L     E#t  :K#E: 
+  E#WW,           .G#D: E#t    f#E:   E#KDDDD###i
+  E#K:              ,K#fK#t     ,WW;  E#f,t#Wi,,,
+  ED.                 j###t      .D#; E#t  ;#W:  
+  t                    .G#t        tt DWi   ,KK: 
+                         ;;                      
               """,
             category="V'ger",
         )
@@ -90,6 +99,7 @@ class Menu(options.Mixin):
                     "See running notebooks",
                     "Snoop on notebook session",
                     "Find models",
+                    "Find datasets",
                     "Back to main menu",
                 ],
             )
@@ -109,9 +119,16 @@ class Menu(options.Mixin):
                 self.snoop_for()
                 self.enumerate()
             case "Find models":
-                self.find_models_runner()
+                self.find_files_runner(file_type="model")
                 if len(self.model_paths) > 0:
                     self.connection.print_with_rule("\n".join(self.model_paths))
+                self.model_paths = list(set(self.model_paths))
+                self.enumerate()
+            case "Find datasets":
+                self.find_files_runner(file_type="data")
+                if len(self.datasets) > 0:
+                    self.connection.print_with_rule("\n".join(self.datasets))
+                self.datasets = list(set(self.datasets))
                 self.enumerate()
             case "Back to main menu":
                 self.menu()
@@ -127,6 +144,7 @@ class Menu(options.Mixin):
                     "Delete file",
                     "Attack running notebook",
                     "Download models",
+                    "Download datasets",
                     "Back to main menu",
                 ],
             )
@@ -150,7 +168,10 @@ class Menu(options.Mixin):
                     self.connection.print_with_rule("Returning to exploit menu")
                     self.exploit()
             case "Download models":
-                self.download_models()
+                self.download_files(self.model_paths)
+                self.exploit()
+            case "Download datasets":
+                self.download_files(self.datasets)
                 self.exploit()
             case "Back to main menu":
                 self.menu()

@@ -20,7 +20,7 @@ class Connection:
         self.jpy_terminals: Dict = dict()
 
     def print_with_rule(self, text, category="Output", json=False):
-        self.con.rule("[bold red]Results")
+        self.con.rule(f"[bold red]{category}")
         if json:
             self.con.print_json(text)
         else:
@@ -28,7 +28,7 @@ class Connection:
                 self.con.print(text)
             except rich.errors.MarkupError:
                 print(text)
-        self.con.rule("[bold red]Results")
+        self.con.rule(f"[bold red]{category}")
 
     def get(self, path="api/contents"):
         return self.session.get(self.url + path).json()
