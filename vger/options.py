@@ -8,6 +8,9 @@ import time
 
 class Mixin:
     def pick_target(self):
+        """
+        Select a specific notebook to target on the server (required for some operations).
+        """
         session_info = dict()
         self.sessions = self.connection.list_running_jpy_sessions()
         if len(self.sessions) == 0:
@@ -29,6 +32,9 @@ class Mixin:
         return len(self.sessions)
 
     def inject(self):
+        """
+        Run code in the context of a notebook runtime. This can be used to overwrite existing variables or modify data.
+        """
         attack_menu = [
             inquirer.List(
                 "payload",
@@ -67,6 +73,9 @@ class Mixin:
         )
 
     def jupyter_backdoor(self, port=7777, secret=""):
+        """
+        Launches a new JupyterLab instance. This can be useful for browser-based interaction that you don't want observed.
+        """
         loop = asyncio.get_event_loop()
         if len(secret) == 0:
             config = [
@@ -112,6 +121,9 @@ class Mixin:
                 self.connection.print_with_rule(f"Backdoor attempted on {port}")
 
     def dump_history(self):
+        """
+        Use IPython magic to see the notebook command history.
+        """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             attack_session(
@@ -125,11 +137,17 @@ class Mixin:
         )
 
     def switch_target_notebook(self):
+        """
+        Change target notebook for notebook-specific operations.
+        """
         self.connection.list_running_jpy_sessions()
         self.pick_target()
         self.exploit_attack()
 
     def run_in_shell(self):
+        """
+        Launches a Jupyter Terminal, runs the command, and deletes the Terminal.
+        """
         code = [inquirer.Text("code", "What shell command would you like to run?")]
         answers = inquirer.prompt(code)
         loop = asyncio.get_event_loop()
@@ -138,6 +156,9 @@ class Mixin:
         )
 
     def list_notebooks(self):
+        """
+        List running notebooks.
+        """
         self.sessions = self.connection.list_running_jpy_sessions()
         if len(self.sessions) > 0:
             for s in self.connection.jpy_sessions:
@@ -148,6 +169,10 @@ class Mixin:
             self.connection.print_with_rule("No running notebooks")
 
     def list_dir(self):
+        """
+        List directory contents.
+        Can also be used to get file contents.
+        """
         dir = [
             inquirer.Text(
                 "dir",
@@ -161,6 +186,9 @@ class Mixin:
             self.connection.print_with_rule(json.dumps(results), json=True)
 
     def upload(self):
+        """
+        Upload file from local host to target host.
+        """
         payload = [
             inquirer.Path(
                 "path",
@@ -188,6 +216,9 @@ class Mixin:
         )
 
     def delete(self):
+        """
+        Delete specific file.
+        """
         target = [inquirer.Text("path", "What file do you want to delete?")]
         answer = inquirer.prompt(target)
         response = self.connection.delete(answer["path"])
@@ -197,6 +228,9 @@ class Mixin:
             self.connection.print_with_rule(f"Error deleting {answer["path"]}")
 
     def snoop_for(self):
+        """
+        Monitor notebook execution and output for specified time.
+        """
         if not self.target:
             self.connection.print_with_rule("You must select a target to snoop on")
             self.pick_target()
@@ -237,6 +271,9 @@ class Mixin:
             "protobuf",
         ],
     ):
+        """
+        Search for models based on known file extensions.
+        """
         try:
             for file in self.connection.list_dir(path)["content"]:
                 if file["type"] == "directory":
@@ -254,6 +291,9 @@ class Mixin:
             pass
 
     def find_models_runner(self):
+        """
+        find_models() is recursive, this manages the loop.
+        """
         file_extensions = [
             "pkl",
             "pickle",
@@ -284,6 +324,9 @@ class Mixin:
             self.find_models(answer["path"], answer["extensions"])
 
     def download_models(self):
+        """
+        Download discovered models.
+        """
         if len(self.model_paths) == 0:
             self.connection.print_with_rule(
                 f"You need to find some models first.\nTry Enumerate -> Find Models"
@@ -311,6 +354,9 @@ class Mixin:
                 self.connection.print_with_rule(f"{model_name} downloaded to {path}")
 
     def export_console(self):
+        """
+        Save anything that's been printed to the console.
+        """
         answer = [
             inquirer.Path(
                 "path",

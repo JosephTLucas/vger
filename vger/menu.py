@@ -1,16 +1,17 @@
 from vger.connection import Connection
 import inquirer
 import vger.options as options
+from typing import List
 
 
 class Menu(options.Mixin):
     def __init__(self):
-        self.server = None
-        self.secret = None
-        self.sessions = list()
-        self.target = None
-        self.connection = None
-        self.model_paths = list()
+        self.server: str = None
+        self.secret: str = None
+        self.sessions: List[str] = list()
+        self.target: str = None
+        self.connection: Connection = None
+        self.model_paths: List[str] = list()
 
     def login(self):
         login_questions = [

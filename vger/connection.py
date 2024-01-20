@@ -4,26 +4,25 @@ import argparse
 import json
 import urllib.parse
 from rich.panel import Panel
+from typing import Dict
 
 
 class Connection:
     def __init__(self, socket, secret):
-        self.url = socket
-        self.secret = secret
-        self.headers = {"Authorization": f"token {secret}"}
-        self.session = requests.Session()
+        self.url: str = socket
+        self.secret: str = secret
+        self.headers: Dict = {"Authorization": f"token {secret}"}
+        self.session: requests.Session = requests.Session()
         self.session.headers.update(self.headers)
-        self.jpy_sessions = dict()
-        self.con = Console(record=True)
-        self.jpy_terminals = dict()
+        self.jpy_sessions: Dict = dict()
+        self.con: Console = Console(record=True)
+        self.jpy_terminals: Dict = dict()
 
     def print_with_rule(self, text, category="Output", json=False):
-        # self.con.rule(f"[bold red]{category}")
         if json:
             self.con.print_json(text)
         else:
             self.con.print(Panel(text, title=category, subtitle=category))
-        # self.con.rule()
 
     def get(self, path="api/contents"):
         return self.session.get(self.url + path).json()
