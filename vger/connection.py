@@ -9,7 +9,7 @@ import rich
 
 
 class Connection:
-    def __init__(self, socket, secret):
+    def __init__(self, socket="", secret=""):
         self.url: str = socket
         self.secret: str = secret
         self.headers: Dict = {"Authorization": f"token {secret}"}

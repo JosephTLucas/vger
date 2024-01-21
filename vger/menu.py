@@ -13,10 +13,28 @@ class Menu(EnumerateMixin, ExploitMixin, PersistMixin):
         self.secret: str = None
         self.sessions: List[str] = list()
         self.target: str = None
-        self.connection: Connection = None
+        self.connection: Connection = Connection()
         self.model_paths: List[str] = list()
         self.datasets: List[str] = list()
         self.jobs: Dict[str, Process] = dict()
+        self.connection.print_with_rule(
+            """
+             .                      ,;           
+             EK,        .Gt       f#i j.         
+             .j;       j#W:     .E#t  EW,        
+  t      .DD.        ;K#f      i#W,   E##j       
+  EK:   ,WK.       .G#D.      L#D.    E###D.     
+  E#t  i#D        j#K;      :K#Wfff;  E#jG#W;    
+  E#t j#f       ,K#f   ,GD; i##WLLLLt E#t t##f   
+  E#tL#i         j#Wi   E#t  .E#L     E#t  :K#E: 
+  E#WW,           .G#D: E#t    f#E:   E#KDDDD###i
+  E#K:              ,K#fK#t     ,WW;  E#f,t#Wi,,,
+  ED.                 j###t      .D#; E#t  ;#W:  
+  t                    .G#t        tt DWi   ,KK: 
+                         ;;                      
+              """,
+            category="V'ger",
+        )
 
     def login(self):
         login_questions = [
@@ -40,24 +58,6 @@ class Menu(EnumerateMixin, ExploitMixin, PersistMixin):
             self.login()
 
     def menu(self):
-        self.connection.print_with_rule(
-            """
-             .                      ,;           
-             EK,        .Gt       f#i j.         
-             .j;       j#W:     .E#t  EW,        
-  t      .DD.        ;K#f      i#W,   E##j       
-  EK:   ,WK.       .G#D.      L#D.    E###D.     
-  E#t  i#D        j#K;      :K#Wfff;  E#jG#W;    
-  E#t j#f       ,K#f   ,GD; i##WLLLLt E#t t##f   
-  E#tL#i         j#Wi   E#t  .E#L     E#t  :K#E: 
-  E#WW,           .G#D: E#t    f#E:   E#KDDDD###i
-  E#K:              ,K#fK#t     ,WW;  E#f,t#Wi,,,
-  ED.                 j###t      .D#; E#t  ;#W:  
-  t                    .G#t        tt DWi   ,KK: 
-                         ;;                      
-              """,
-            category="V'ger",
-        )
         nav_menu = [
             inquirer.List(
                 "option",
