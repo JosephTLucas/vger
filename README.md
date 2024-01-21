@@ -27,6 +27,7 @@ The top level menu is:
 - **Quit**: No one likes quitters.
 
 These menus contain the following functionality:
+- **List modules**: Identify imported modules in target notebooks to determine what libraries are available for injected code.
 - **Inject**: Execute code in the context of the selected notebook. Code can be provided in a text editor or by specifying a local `.py` file. Either input is processed as a string and executed in runtime of the notebook. Output will be transparent to other notebook users by specifying `Noisy` or `Stealthy` when prompted. This selection will also dictate how much information is returned to the user about their execution.
 - **Backdoor**: Launch a new JupyterLab instance open to `0.0.0.0`, with `allow-root` on a user-specified `port` with a user-specified `password`.
 - **Check History**: See ipython commands recently run in the target notebook.

@@ -17,6 +17,12 @@ class Menu(EnumerateMixin, ExploitMixin, PersistMixin):
         self.model_paths: List[str] = list()
         self.datasets: List[str] = list()
         self.jobs: Dict[str, Process] = dict()
+        self.first_time_in_menu: Dict[str, bool] = {
+            "enumerate": True,
+            "exploit": True,
+            "exploit_attack": True,
+            "persist": True,
+        }
         self.connection.print_with_rule(
             """
              .                      ,;           
@@ -90,9 +96,24 @@ class Menu(EnumerateMixin, ExploitMixin, PersistMixin):
                 self.export_console()
                 self.menu()
             case "Quit":
+                for k, v in self.jobs.items():
+                    v.kill()
                 exit()
 
     def enumerate(self):
+        if self.first_time_in_menu["enumerate"]:
+            self.first_time_in_menu["enumerate"] = False
+            self.connection.print_with_rule(
+                """
+                Use your access to the jupyter server to search and learn more about the environment.
+
+                [bold red]Run shell commands[/bold red] like ls or pwd.
+                [bold red]List directories[/bold red] and [bold red]get files[/bold red] from the server.
+                [bold red]See running notebooks[/bold red] and [bold red]snoop on[/bold red] activity.
+                [bold red]Find models[/bold red] and [bold red]datasets[/bold red] in the environment.
+                """,
+                category="Enumerate",
+            )
         enumerate_menu = [
             inquirer.List(
                 "option",
@@ -138,6 +159,18 @@ class Menu(EnumerateMixin, ExploitMixin, PersistMixin):
                 self.menu()
 
     def exploit(self):
+        if self.first_time_in_menu["exploit"]:
+            self.first_time_in_menu["exploit"] = False
+            self.connection.print_with_rule(
+                """
+                Expand your access into the jupyter server and start interacting with notebooks.
+                [bold red]Run shell commands[/bold red] to change server state.
+                [bold red]Upload[/bold red] and [bold red]Delete[/bold red] files to exfiltrate valuable artifacts or upload payloads.
+                [bold red]Attack running notebooks[/bold red] to inject code or snoop on sessions.
+                [bold red]Download models[/bold red] and [bold red]datasets[/bold red] to your local host.
+                """,
+                category="Exploit",
+            )
         exploit_menu = [
             inquirer.List(
                 "option",
@@ -181,17 +214,31 @@ class Menu(EnumerateMixin, ExploitMixin, PersistMixin):
                 self.menu()
 
     def exploit_attack(self):
+        if self.first_time_in_menu["exploit_attack"]:
+            self.first_time_in_menu["exploit_attack"] = False
+            self.connection.print_with_rule(
+                """
+                Focus on a specific notebook session.
+                [bold red]Show history[/bold red] of commands run in the notebook.
+                [bold red]List imported modules[/bold red] in the notebook. Useful for identifying what imports you have available.
+                [bold red]Inject code[/bold red] into the notebook runtime (just as if the user ran it). Great for poisoning.
+                [bold red]Snoop[/bold red] on the notebook session to see what the user is doing.
+                [bold red]Start and kill recurring jobs[/bold red] to inject code on your schedule.
+                """,
+                category="Exploit Notebook",
+            )
         attack_menu = [
             inquirer.List(
                 "option",
                 "Show history or inject code?",
                 choices=[
                     "Show history",
+                    "List imported modules",
                     "Inject code",
-                    "Switch notebook",
                     "Snoop",
                     "Recurring job",
                     "Kill job",
+                    "Switch notebook",
                     "Back to main menu",
                 ],
             )
@@ -200,6 +247,9 @@ class Menu(EnumerateMixin, ExploitMixin, PersistMixin):
         match answer["option"]:
             case "Show history":
                 self.dump_history()
+                self.exploit_attack()
+            case "List imported modules":
+                self.list_modules()
                 self.exploit_attack()
             case "Inject code":
                 self.inject()
@@ -223,6 +273,17 @@ class Menu(EnumerateMixin, ExploitMixin, PersistMixin):
                 self.menu()
 
     def persist(self):
+        if self.first_time_in_menu["persist"]:
+            self.first_time_in_menu["persist"] = False
+            self.connection.print_with_rule(
+                """
+                Develop alternate access mechanisms.
+                [bold red]Run shell commands[/bold red] to change server state.
+                [bold red]Upload[/bold red] and [bold red]Delete[/bold red] files to manage payloads.
+                Launch a [bold red]Backdoor[/bold red] Jupyter server so you have a way back that blends in.
+                """,
+                category="Persist",
+            )
         persist_menu = [
             inquirer.List(
                 "option",
