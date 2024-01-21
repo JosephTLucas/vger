@@ -2,8 +2,6 @@
 
 ![](static/vger.jpg)
 
-_"…On its journey back, it amassed so much knowledge, it achieved consciousness itself. It became a living thing."_
-
 V'ger is an interactive command-line application for interacting with authenticated Jupyter instances.
 
 ## Usage
