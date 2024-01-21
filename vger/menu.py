@@ -1,11 +1,13 @@
 from vger.connection import Connection
 import inquirer
-import vger.options as options
+from vger.enumerate import EnumerateMixin
+from vger.exploit import ExploitMixin
+from vger.persist import PersistMixin
 from typing import List, Dict
 from multiprocessing import Process
 
 
-class Menu(options.Mixin):
+class Menu(EnumerateMixin, ExploitMixin, PersistMixin):
     def __init__(self):
         self.server: str = None
         self.secret: str = None
