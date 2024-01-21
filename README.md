@@ -14,8 +14,6 @@ Upon opening the application, users will be prompted for connection information.
 1. Provide the full target host including the port and trailing slash (such as `http://172.0.0.1:8888/`).
 2. Provide the token or password.
 
-If prompt returns back to `hostname`, either the connection failed or there were no open notebook sessions running on that host.
-
 ## Commands
 
 Once a connection is established, users drop into a nested set of menus.
