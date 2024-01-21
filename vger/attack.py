@@ -12,13 +12,13 @@ import requests
 
 
 async def attack_session(
-    connection, session, code, silent=False, print_out=True, get_hist=False
+    connection, session, code, silent=True, print_out=True, get_hist=False
 ):
     jpy_sess = connection.jpy_sessions[session]
     code_msg_id = str(uuid.uuid1())
     code_msg = {
         "channel": "shell",
-        "content": {"silent": silent, "code": code},
+        "content": {"silent": silent, "store_history": False, "code": code},
         "header": {"msg_id": code_msg_id, "msg_type": "execute_request"},
         "metadata": {},
         "parent_header": {},
