@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "vger"
-version = "0.1.2"
+version = "0.1.3"
 description = "An execution framework for Jupyter environments."
 authors = ["Joseph Lucas <joe@joetl.com>"]
 license = "GPL-3.0-only"
