@@ -41,3 +41,4 @@ These menus contain the following functionality:
 - **Find models**: Find models based on common file formats.
 - **Download models**: Download discovered models.
 - **Snoop**: Monitor notebook execution and results until timeout.
+- **Recurring jobs**: Launch/Kill recurring snippets of code silently run in the target environment.

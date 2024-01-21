@@ -1,7 +1,8 @@
 from vger.connection import Connection
 import inquirer
 import vger.options as options
-from typing import List
+from typing import List, Dict
+from multiprocessing import Process
 
 
 class Menu(options.Mixin):
@@ -13,6 +14,7 @@ class Menu(options.Mixin):
         self.connection: Connection = None
         self.model_paths: List[str] = list()
         self.datasets: List[str] = list()
+        self.jobs: Dict[str, Process] = dict()
 
     def login(self):
         login_questions = [
@@ -186,6 +188,8 @@ class Menu(options.Mixin):
                     "Inject code",
                     "Switch notebook",
                     "Snoop",
+                    "Recurring job",
+                    "Kill job",
                     "Back to main menu",
                 ],
             )
@@ -203,6 +207,15 @@ class Menu(options.Mixin):
                 self.exploit_attack()
             case "Snoop":
                 self.snoop_for()
+                self.exploit_attack()
+            case "Recurring job":
+                self.variable_stomp()
+                self.exploit_attack()
+            case "Kill job":
+                if len(self.jobs) > 0:
+                    self.kill_job()
+                else:
+                    self.connection.print_with_rule("No running jobs to kill")
                 self.exploit_attack()
             case "Back to main menu":
                 self.menu()

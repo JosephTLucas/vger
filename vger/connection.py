@@ -88,3 +88,21 @@ if __name__ == "__main__":
     args = parser.parse_args()
     c = Connection(args.socket, args.secret)
     print(c.list_dir(args.path))
+
+
+class DumbConnection:
+    def __init__(self, socket, secret):
+        self.url: str = socket
+        self.secret: str = secret
+        self.headers: Dict = {"Authorization": f"token {secret}"}
+        self.jpy_sessions: Dict = dict()
+
+    def get(self, path="api/contents"):
+        return requests.get(self.url + path, headers=self.headers).json()
+
+    def list_running_jpy_sessions(self):
+        sessions = list()
+        for jpy_sess in self.get("api/sessions"):
+            self.jpy_sessions[jpy_sess["id"]] = jpy_sess
+            sessions.append(jpy_sess["id"])
+        return sessions

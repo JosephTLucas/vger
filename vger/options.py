@@ -1,9 +1,11 @@
 import inquirer
 import asyncio
-from vger.attack import attack_session, run_ephemeral_terminal, snoop
+from vger.attack import attack_session, run_ephemeral_terminal, snoop, stomp
 import json
 import base64
 import time
+import multiprocessing as mp
+from vger.connection import Connection, DumbConnection
 
 
 class Mixin:
@@ -37,7 +39,7 @@ class Mixin:
         """
         attack_menu = [
             inquirer.List(
-                "payload",
+                name="payload",
                 message="Would you like to type your payload or reference an existing .py file?",
                 choices=["Type", ".py"],
             )
@@ -48,7 +50,10 @@ class Mixin:
         else:
             payload = [
                 inquirer.Path(
-                    "path", "Where is the payload .py? ", path_type=inquirer.Path.FILE
+                    name="path",
+                    message="Where is the payload .py? ",
+                    path_type=inquirer.Path.FILE,
+                    exists=True,
                 )
             ]
             answer = inquirer.prompt(payload)
@@ -161,10 +166,11 @@ class Mixin:
         """
         self.sessions = self.connection.list_running_jpy_sessions()
         if len(self.sessions) > 0:
-            for s in self.connection.jpy_sessions:
-                name = self.connection.jpy_sessions[s]["name"]
-                last_active = f"Last Active: {self.connection.jpy_sessions[s]['kernel']['last_activity']}"
-                self.connection.print_with_rule(f"{name:<20} {last_active:<30}" + "\n")
+            printable_sessions = [
+                f"{self.connection.jpy_sessions[s]['name']:<20} Last Active: {self.connection.jpy_sessions[s]['kernel']['last_activity']:<30}"
+                for s in self.connection.jpy_sessions
+            ]
+            self.connection.print_with_rule("\n".join(printable_sessions))
         else:
             self.connection.print_with_rule("No running notebooks")
 
@@ -191,9 +197,10 @@ class Mixin:
         """
         payload = [
             inquirer.Path(
-                "path",
-                "What file do you want to upload? ",
+                name="path",
+                message="What file do you want to upload? ",
                 path_type=inquirer.Path.FILE,
+                exists=True,
             )
         ]
         answer = inquirer.prompt(payload)
@@ -310,6 +317,7 @@ class Mixin:
                 "extensions",
                 "What extensions would you like to search for?",
                 choices=file_extensions,
+                default=file_extensions,
             ),
         ]
         answer = inquirer.prompt(answer)
@@ -331,8 +339,11 @@ class Mixin:
                     "path",
                     message="What directory would you like to download to?",
                     path_type=inquirer.Path.DIRECTORY,
+                    exists=True,
                 ),
-                inquirer.Checkbox("artifacts", "What do you want?", choices=tracker),
+                inquirer.Checkbox(
+                    "artifacts", "What do you want?", choices=tracker, default=tracker
+                ),
             ]
             answer = inquirer.prompt(answer)
             path = answer["path"].split("? ")[-1]
@@ -353,9 +364,42 @@ class Mixin:
                 "path",
                 message="What directory would you like to save your output?",
                 path_type=inquirer.Path.DIRECTORY,
+                exists=True,
             )
         ]
         answer = inquirer.prompt(answer)
         log_path = f"{answer["path"]}vger-{time.strftime("%Y%m%d-%H%M%S")}.log"
         self.connection.con.save_text(log_path)
         self.connection.print_with_rule(f"Log saved to {log_path}")
+
+    def variable_stomp(self):
+        answers = [
+            inquirer.Text("job_name", "What do you want to name this job?"),
+            inquirer.Editor(
+                "objective", "What do you want to run on a recurring basis?"
+            ),
+            inquirer.Text(
+                "sleep", "How many seconds do you want to sleep between runs?"
+            ),
+        ]
+        answers = inquirer.prompt(answers)
+        ctx = mp.get_context("spawn")
+        x = DumbConnection(self.connection.url, self.connection.secret)
+        x.list_running_jpy_sessions()
+        p = ctx.Process(
+            target=stomp,
+            args=(x, self.target, answers["objective"], int(answers["sleep"])),
+        )
+        self.jobs[answers["job_name"]] = p
+        p.start()
+
+    def kill_job(self):
+        answers = [
+            inquirer.Checkbox(
+                "jobs", "What job(s) do you want to kill?", choices=self.jobs.keys()
+            )
+        ]
+        answers = inquirer.prompt(answers)
+        for job in answers["jobs"]:
+            self.jobs[job].kill()
+            self.connection.print_with_rule(f"Killed {job}")

