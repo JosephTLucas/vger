@@ -51,7 +51,7 @@ async def attack_session(
     ) as conn:
         await recv_all(connection, conn, timeout=1)
         if print_out:
-            connection.print_with_rule(f"[bold red]INJECT> {code_msg['code']}", category="[bold red]CODE INJECTED")
+            connection.print_with_rule(f"[bold red]INJECT> {code_msg['content']['code']}", category="[bold red]CODE INJECTED")
         await conn.send(json.dumps(code_msg))
         return await recv_all(connection, conn, timeout=1)
 
