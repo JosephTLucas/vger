@@ -87,7 +87,7 @@ class EnumerateMixin:
                     self.find_files(file_extensions, tracker, file["path"])
                 elif (
                     file["type"] == "file"
-                    and file["name"].split(".")[-1] in file_extensions
+                    and file["name"].split(".")[-1].lower() in file_extensions
                 ):
                     self.connection.print_with_rule(f"Found {file["path"]}")
                     tracker.append(file["path"])
