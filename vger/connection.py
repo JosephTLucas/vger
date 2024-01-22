@@ -3,7 +3,6 @@ from rich.console import Console
 import argparse
 import json
 import urllib.parse
-from rich.panel import Panel
 from typing import Dict
 import rich
 

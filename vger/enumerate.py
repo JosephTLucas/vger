@@ -142,7 +142,7 @@ class EnumerateMixin:
         """
         if len(tracker) == 0:
             self.connection.print_with_rule(
-                f"You need to find some artifacts first.\nTry Enumerate -> Find [artifact]"
+                "You need to find some artifacts first.\nTry Enumerate -> Find [artifact]"
             )
             self.exploit()
         else:
