@@ -10,6 +10,8 @@ V'ger is an interactive command-line application for interacting with authentica
 
 ## Initial Setup
 
+`pip install vger`
+
 Upon opening the application, users will be prompted for connection information.
 1. Provide the full target host including the port and trailing slash (such as `http://172.0.0.1:8888/`).
 2. Provide the token or password.
