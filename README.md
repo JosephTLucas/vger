@@ -41,3 +41,6 @@ These menus contain the following functionality:
 - **Download models**: Download discovered models.
 - **Snoop**: Monitor notebook execution and results until timeout.
 - **Recurring jobs**: Launch/Kill recurring snippets of code silently run in the target environment.
+
+## Examples
+- [Overwrite a Torch Dataset to change labels](https://t.co/PAJRzTUO2x)
