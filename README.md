@@ -16,6 +16,12 @@ Upon opening the application, users will be prompted for connection information.
 1. Provide the full target host including the port and trailing slash (such as `http://172.0.0.1:8888/`).
 2. Provide the token or password.
 
+## Usage as a Post-Exploitation Kit
+`pip install` on a target host via C2 Implant can be a very noisy operation. 
+Consider cloning the repository and using [pyinstaller](https://pyinstaller.org/en/stable/) to make an executable. 
+Note that Pyinstsaller is not cross-compatible - compile for your target environment, i.e Linux on Linux. 
+
+
 ## Commands
 
 Once a connection is established, users drop into a nested set of menus.
