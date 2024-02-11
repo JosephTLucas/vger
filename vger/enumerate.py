@@ -1,21 +1,84 @@
 import inquirer
 import asyncio
-from vger.attack import run_ephemeral_terminal
+from vger.attack import Attack
+from vger.connection import Connection
 import json
 import base64
 
 
-class EnumerateMixin:
+class Enumerate:
+    def __init__(self, host_or_connection, secret=None):
+        if isinstance(host_or_connection, Connection):
+            self.connection = host_or_connection
+        else:
+            self.connection = Connection(host_or_connection, secret)
+        
+
+    def enumerate(self):
+        if self.connection.first_time_in_menu["enumerate"]:
+            self.connection.first_time_in_menu["enumerate"] = False
+            self.connection.print_with_rule(
+                """
+                Use your access to the jupyter server to search and learn more about the environment.
+
+                [bold red]Run shell commands[/bold red] like ls or pwd.
+                [bold red]List directories[/bold red] and [bold red]get files[/bold red] from the server.
+                [bold red]See running notebooks[/bold red].
+                [bold red]Find models[/bold red] and [bold red]datasets[/bold red] in the environment.
+                """,
+                category="Enumerate",
+            )
+        enumerate_menu = [
+            inquirer.List(
+                "option",
+                "How would you like to enumerate?",
+                choices=[
+                    "Run shell command",
+                    "List dir or get file",
+                    "See running notebooks",
+                    "Find models",
+                    "Find datasets",
+                    "Back to main menu",
+                ],
+            )
+        ]
+        answer = inquirer.prompt(enumerate_menu)
+        match answer["option"]:
+            case "Run shell command":
+                self.run_in_shell()
+                self.enumerate()
+            case "List dir or get file":
+                self.list_dir()
+                self.enumerate()
+            case "See running notebooks":
+                self.list_notebooks()
+                self.enumerate()
+            case "Find models":
+                self.find_files_runner(file_type="model")
+                if len(self.connection.model_paths) > 0:
+                    self.connection.print_with_rule("\n".join(self.connection.model_paths))
+                self.connection.model_paths = list(set(self.connection.model_paths))
+                self.enumerate()
+            case "Find datasets":
+                self.find_files_runner(file_type="data")
+                if len(self.connection.datasets) > 0:
+                    self.connection.print_with_rule("\n".join(self.connection.datasets))
+                self.connection.datasets = list(set(self.connection.datasets))
+                self.enumerate()
+            case "Back to main menu":
+                self.menu()
+
+
     def pick_target(self):
         """
         Select a specific notebook to target on the server (required for some operations).
         """
         session_info = dict()
-        self.sessions = self.connection.list_running_jpy_sessions()
-        if len(self.sessions) == 0:
+        self.connection.sessions = self.connection.list_running_jpy_sessions()
+        if len(self.connection.sessions) == 0:
             self.connection.print_with_rule("No running notebooks to attach to")
         else:
-            for s in self.sessions:
+            for s in self.connection.sessions:
                 name = self.connection.jpy_sessions[s]["name"]
                 last_active = f"Last Active: {self.connection.jpy_sessions[s]['kernel']['last_activity']}"
                 session_info[f"{name:<20} {last_active:<30}"] = s
@@ -27,8 +90,8 @@ class EnumerateMixin:
                 )
             ]
             answer = inquirer.prompt(select_kernel)
-            self.target = session_info[answer["kernel"]]
-        return len(self.sessions)
+            self.connection.target = session_info[answer["kernel"]]
+        return len(self.connection.sessions)
 
     def run_in_shell(self):
         """
@@ -38,15 +101,15 @@ class EnumerateMixin:
         answers = inquirer.prompt(code)
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            run_ephemeral_terminal(self.connection, answers["code"])
+            Attack(self.connection).run_ephemeral_terminal(self.connection, answers["code"])
         )
 
     def list_notebooks(self):
         """
         List running notebooks.
         """
-        self.sessions = self.connection.list_running_jpy_sessions()
-        if len(self.sessions) > 0:
+        self.connection.sessions = self.connection.list_running_jpy_sessions()
+        if len(self.connection.sessions) > 0:
             printable_sessions = [
                 f"{self.connection.jpy_sessions[s]['name']:<20} Last Active: {self.connection.jpy_sessions[s]['kernel']['last_activity']:<30}"
                 for s in self.connection.jpy_sessions
@@ -117,10 +180,10 @@ class EnumerateMixin:
                 "zip",
                 "bin",
             ]
-            tracker = self.model_paths
+            tracker = self.connection.model_paths
         elif file_type == "data":
             file_extensions = ["csv", "json", "jsonl", "parquet", "avro"]
-            tracker = self.datasets
+            tracker = self.connection.datasets
         answer = [
             inquirer.Text(
                 "path", "What path would you like to recursively search?", default="/"
@@ -144,7 +207,7 @@ class EnumerateMixin:
             self.connection.print_with_rule(
                 "You need to find some artifacts first.\nTry Enumerate -> Find [artifact]"
             )
-            self.exploit()
+            self.enumerate()
         else:
             answer = [
                 inquirer.Path(

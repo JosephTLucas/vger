@@ -6,6 +6,7 @@ import urllib.parse
 from typing import Dict
 import rich
 from datetime import datetime
+import fire
 
 
 class Connection:
@@ -18,6 +19,12 @@ class Connection:
         self.jpy_sessions: Dict = dict()
         self.con: Console = Console(record=True)
         self.jpy_terminals: Dict = dict()
+        self.sessions = list()
+        self.target = None
+        self.model_paths = list()
+        self.datasets = list()
+        self.jobs = dict()
+        self.first_time_in_menu = {"enumerate": True, "exploit": True, "exploit_attack": True, "persist": True}
 
     def print_with_rule(self, text, category="Output", json=False):
         self.con.rule(f"[bold green]{category}")
@@ -81,16 +88,13 @@ class Connection:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Connect to target")
-    parser.add_argument("socket", type=str, help="Target socket as http://host:port/")
-    parser.add_argument("secret", type=str, help="Token or password")
-    parser.add_argument("path", type=str, help="list path")
-    args = parser.parse_args()
-    c = Connection(args.socket, args.secret)
-    print(c.list_dir(args.path))
+    fire.Fire(Connection)
 
 
 class DumbConnection:
+    """
+    Pickle-serializable Connection for Python process spawning
+    """
     def __init__(self, socket, secret):
         self.url: str = socket
         self.secret: str = secret
