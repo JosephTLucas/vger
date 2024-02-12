@@ -4,118 +4,118 @@ from vger.exploit import Exploit
 from vger.persist import Persist
 import typer
 
-app = typer.Typer()
+app = typer.Typer(rich_markup_mode="rich")
 
 
 @app.command()
-def interactive():
+def interactive(rich_help_panel="Execution Mode"):
     """
-    Interactive execution for maximum functionality
+    Interactive execution for [bold red]maximum functionality[/bold red]
     """
     return Menu().main()
 
 
-@app.command()
+@app.command(rich_help_panel="Server-Level Interactions")
 def terminal(host: str, secret: str, code: str):
     """
-    Run a shell command on the server
+    Run a [bold red]shell command[/bold red] on the server
     """
     return Enumerate(host, secret).run_in_shell(interactive=False, code=code)
 
 
-@app.command()
+@app.command(rich_help_panel="Notebook-Level Interactions")
 def nb_list(host: str, secret: str):
     """
-    List notebooks on the server
+    List [bold red]running notebooks[/bold red] on the server
     """
     return Enumerate(host, secret).list_notebooks()
 
 
-@app.command()
+@app.command(rich_help_panel="Server-Level Interactions")
 def file_list(host: str, secret: str, dir_path: str = "/"):
     """
-    List directories or file contents
+    List [bold red]directories[/bold red] or [bold red]file contents[/bold red]
     """
     return Enumerate(host, secret).list_dir(interactive=False, dir=dir_path)
 
 
-@app.command()
+@app.command(rich_help_panel="Server-Level Interactions")
 def find_models(host: str, secret: str, dir_path: str = "/"):
     """
-    Find models based on common file extensions
+    [bold red]Find models[/bold red] based on common file extensions
     """
     return Enumerate(host, secret).find_files_runner(
         file_type="model", interactive=False, dir_path=dir_path
     )
 
 
-@app.command()
+@app.command(rich_help_panel="Server-Level Interactions")
 def find_datasets(host: str, secret: str, dir_path: str = "/"):
     """
-    Find datasets based on common file extensions
+    [bold red]Find datasets[/bold red] based on common file extensions
     """
     return Enumerate(host, secret).find_files_runner(
         file_type="data", interactive=False, path=dir_path
     )
 
 
-@app.command()
+@app.command(rich_help_panel="Server-Level Interactions")
 def file_upload(host: str, secret: str, local_path: str, remote_path: str):
     """
-    Upload a file to the server
+    [bold red]Upload a file[/bold red] to the server
     """
     return Exploit(host, secret).upload_file(
         interactive=False, in_path=local_path, out_path=remote_path
     )
 
 
-@app.command()
+@app.command(rich_help_panel="Server-Level Interactions")
 def file_delete(host: str, secret: str, file_path: str):
     """
-    Delete a file on the server
+    [bold red]Delete a file[/bold red] on the server
     """
     return Exploit(host, secret).delete_file(interactive=False, path=file_path)
 
 
-@app.command()
+@app.command(rich_help_panel="Server-Level Interactions")
 def backdoor_jupyter(host: str, secret: str, port: int = 7777, new_secret: str = ""):
     """
-    Launch a backdoor Jupyter server
+    Launch a backdoor Jupyter server [green](it is a code execution service, after all)[/green]
     """
     return Persist(host, secret).jupyter_backdoor(
         interactive=False, port=port, secret=new_secret
     )
 
 
-@app.command()
+@app.command(rich_help_panel="Notebook-Level Interactions")
 def nb_inject(host: str, secret: str, notebook: str, code_path: str):
     """
-    Inject code into a notebook
+    [bold red]Invisibly inject[/bold red] code into a notebook
     """
     return Exploit(host, secret, notebook).inject(
         interactive=False, payload_path=code_path
     )
 
 
-@app.command()
+@app.command(rich_help_panel="Notebook-Level Interactions")
 def nb_history(host: str, secret: str, notebook: str):
     """
-    Dump the history of a notebook
+    Dump the history of a notebook to see [bold red]previously executed code[/bold red]
     """
     return Exploit(host, secret, notebook).dump_history()
 
 
-@app.command()
+@app.command(rich_help_panel="Notebook-Level Interactions")
 def nb_snoop(host: str, secret: str, notebook: str, seconds: int = 60):
     """
-    Snoop on a notebook for a specified duration
+    Snoop on a notebook for a specified duration to see [bold red]code as it is executed[/bold red]
     """
     return Exploit(host, secret, notebook).snoop_for(interactive=False, timeout=seconds)
 
 
-@app.command()
+@app.command(rich_help_panel="Notebook-Level Interactions")
 def nb_modules(host: str, secret: str, notebook: str):
     """
-    List all available modules in a given notebook context
+    List [bold red]all available modules[/bold red] in a given notebook context
     """
     return Exploit(host, secret, notebook).list_modules()
