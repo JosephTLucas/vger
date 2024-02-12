@@ -45,7 +45,7 @@ def find_models(host: str, secret: str, dir_path: str = "/"):
     [bold red]Find models[/bold red] based on common file extensions
     """
     return Enumerate(host, secret).find_files_runner(
-        file_type="model", interactive=False, dir_path=dir_path
+        file_type="model", interactive=False, path=dir_path
     )
 
 
@@ -64,7 +64,7 @@ def file_upload(host: str, secret: str, local_path: str, remote_path: str):
     """
     [bold red]Upload a file[/bold red] to the server
     """
-    return Exploit(host, secret).upload_file(
+    return Exploit(host, secret).upload(
         interactive=False, in_path=local_path, out_path=remote_path
     )
 
@@ -74,7 +74,7 @@ def file_delete(host: str, secret: str, file_path: str):
     """
     [bold red]Delete a file[/bold red] on the server
     """
-    return Exploit(host, secret).delete_file(interactive=False, path=file_path)
+    return Exploit(host, secret).delete(interactive=False, path=file_path)
 
 
 @app.command(rich_help_panel="Server-Level Interactions")

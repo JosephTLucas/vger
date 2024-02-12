@@ -22,6 +22,8 @@ V'ger is an interactive command-line application for post-exploitation of authen
 
 Currently, `vger interactive` has maximum functionality, maintaining state for discovered artifacts and recurring jobs. However, most functionality is also available by-name in non-interactive format with `vger <module>`. List available modules with `vger --help`.
 
+![](static/cli-help.png)
+
 ## Commands
 
 Once a connection is established, users drop into a nested set of menus.
