@@ -2,7 +2,14 @@
 
 ![](static/vger.jpg)
 
-V'ger is an interactive command-line application for interacting with authenticated Jupyter instances.
+V'ger is an interactive command-line application for post-exploitation of authenticated Jupyter instances with a focus on AI/ML security operations.
+
+## User Stories
+
+- As a **Red Teamer**, you've found Jupyter credentials, but don't know what you can do with them. V'ger is organized in a format that should be intuitive for most offensive security professionals to help them understand the functionality of the target Jupyter server.
+- As a **Red Teamer**, you know that some browser-based actions will be visibile to the legitimate Jupyter users. For example, modifying tabs will appear in their workspace and commands entered in cells will be recorded to the history. V'ger decreases the likelihood of detection.
+- As an **AI Red Teamer**, you understand academic algorthmic attacks, but need a more practical execution vector. For instance, you may need to modify a large, foundational internet-scale dataset as part of a model poisoning operation. Modifying that dataset at its source may be impossible or generate undesirable auditable artifacts. with V'ger you can achieve the same objectives in-memory, a significant improvement in tradecraft.
+- As a **Blue Teamer**, you want to understand logging and visibility into a live Jupyter deployment. V'ger can help you generate repeatable artifacts for testing instrumentation and performing incident response exercises.
 
 ## Usage
 
@@ -10,11 +17,12 @@ V'ger is an interactive command-line application for interacting with authentica
 
 ## Initial Setup
 
-`pip install vger`
+1. `pip install vger`
+2. `vger --help`
 
-Upon opening the application, users will be prompted for connection information.
-1. Provide the full target host including the port and trailing slash (such as `http://172.0.0.1:8888/`).
-2. Provide the token or password.
+Currently, `vger interactive` has maximum functionality, maintaining state for discovered artifacts and recurring jobs. However, most functionality is also available by-name in non-interactive format with `vger <module>`. List available modules with `vger --help`.
+
+![](static/cli-help.png)
 
 ## Commands
 

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "vger"
-version = "0.1.6"
+version = "0.1.7"
 description = "An execution framework for Jupyter environments."
 authors = ["Joseph Lucas <joe@joetl.com>"]
 license = "GPL-3.0-only"
@@ -11,7 +11,7 @@ packages = [
 ]
 
 [tool.poetry.scripts]
-vger = 'vger.menu:cli'
+vger = 'vger.application:app'
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -20,6 +20,7 @@ rich = "^13.7"
 urllib3 = "^2.1"
 websockets = "^12.0"
 requests = "^2.30"
+typer = {extras = ["all"], version = "^0.9.0"}
 
 
 
