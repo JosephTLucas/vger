@@ -2,7 +2,7 @@
 
 ![](static/vger.jpg)
 
-V'ger is an interactive command-line application for interacting with authenticated Jupyter instances.
+V'ger is an interactive command-line application for post-exploitation with authenticated Jupyter instances.
 
 ## Usage
 
@@ -10,11 +10,10 @@ V'ger is an interactive command-line application for interacting with authentica
 
 ## Initial Setup
 
-`pip install vger`
+1. `pip install vger`
+2. `vger --help`
 
-Upon opening the application, users will be prompted for connection information.
-1. Provide the full target host including the port and trailing slash (such as `http://172.0.0.1:8888/`).
-2. Provide the token or password.
+Currently, `vger interactive` has maximum functionality, maintaining state for discovered artifacts and recurring jobs. However, most functionality is also available by-name in non-interactive format with `vger <module>`. List available modules with `vger --help`.
 
 ## Commands
 

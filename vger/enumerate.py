@@ -12,7 +12,6 @@ class Enumerate:
             self.connection = host_or_connection
         else:
             self.connection = Connection(host_or_connection, secret)
-        
 
     def enumerate(self):
         if self.connection.first_time_in_menu["enumerate"]:
@@ -56,7 +55,9 @@ class Enumerate:
             case "Find models":
                 self.find_files_runner(file_type="model")
                 if len(self.connection.model_paths) > 0:
-                    self.connection.print_with_rule("\n".join(self.connection.model_paths))
+                    self.connection.print_with_rule(
+                        "\n".join(self.connection.model_paths)
+                    )
                 self.connection.model_paths = list(set(self.connection.model_paths))
                 self.enumerate()
             case "Find datasets":
@@ -66,8 +67,7 @@ class Enumerate:
                 self.connection.datasets = list(set(self.connection.datasets))
                 self.enumerate()
             case "Back to main menu":
-                self.menu()
-
+                self.connection.menu.menu()
 
     def pick_target(self):
         """
@@ -93,16 +93,16 @@ class Enumerate:
             self.connection.target = session_info[answer["kernel"]]
         return len(self.connection.sessions)
 
-    def run_in_shell(self):
+    def run_in_shell(self, interactive=True, code=""):
         """
         Launches a Jupyter Terminal, runs the command, and deletes the Terminal.
         """
-        code = [inquirer.Text("code", "What shell command would you like to run?")]
-        answers = inquirer.prompt(code)
+        if interactive:
+            code = [inquirer.Text("code", "What shell command would you like to run?")]
+            answers = inquirer.prompt(code)
+            code = answers["code"]
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            Attack(self.connection).run_ephemeral_terminal(self.connection, answers["code"])
-        )
+        loop.run_until_complete(Attack(self.connection).run_ephemeral_terminal(code))
 
     def list_notebooks(self):
         """
@@ -118,20 +118,22 @@ class Enumerate:
         else:
             self.connection.print_with_rule("No running notebooks")
 
-    def list_dir(self):
+    def list_dir(self, interactive=True, dir="/"):
         """
         List directory contents.
         Can also be used to get file contents.
         """
-        dir = [
-            inquirer.Text(
-                "dir",
-                "What directory or file would you like to list?",
-                default="/",
-            )
-        ]
-        answers = inquirer.prompt(dir)
-        results = self.connection.list_dir(answers["dir"])
+        if interactive:
+            dir = [
+                inquirer.Text(
+                    "dir",
+                    "What directory or file would you like to list?",
+                    default="/",
+                )
+            ]
+            answers = inquirer.prompt(dir)
+            dir = answers["dir"]
+        results = self.connection.list_dir(dir)
         with self.connection.con.pager():
             self.connection.print_with_rule(json.dumps(results), json=True)
 
@@ -159,7 +161,7 @@ class Enumerate:
         except KeyError:
             pass
 
-    def find_files_runner(self, file_type="model"):
+    def find_files_runner(self, file_type="model", interactive=True, path="/"):
         """
         find_files() is recursive, this manages the loop.
         """
@@ -184,20 +186,26 @@ class Enumerate:
         elif file_type == "data":
             file_extensions = ["csv", "json", "jsonl", "parquet", "avro"]
             tracker = self.connection.datasets
-        answer = [
-            inquirer.Text(
-                "path", "What path would you like to recursively search?", default="/"
-            ),
-            inquirer.Checkbox(
-                "extensions",
-                "What extensions would you like to search for?",
-                choices=file_extensions,
-                default=file_extensions,
-            ),
-        ]
-        answer = inquirer.prompt(answer)
+        if interactive:
+            answer = [
+                inquirer.Text(
+                    "path",
+                    "What path would you like to recursively search?",
+                    default="/",
+                ),
+                inquirer.Checkbox(
+                    "extensions",
+                    "What extensions would you like to search for?",
+                    choices=file_extensions,
+                    default=file_extensions,
+                ),
+            ]
+            answer = inquirer.prompt(answer)
+            file_extensions = answer["extensions"]
+            path = answer["path"]
         with self.connection.con.status("Searching..."):
-            self.find_files(answer["extensions"], tracker, answer["path"])
+            self.find_files(file_extensions, tracker, path)
+            self.connection.print_with_rule(f"Found {len(tracker)} {file_type} files")
 
     def download_files(self, tracker):
         """

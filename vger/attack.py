@@ -3,17 +3,18 @@ import asyncio
 import json
 from urllib.parse import urlparse
 from websockets import connect
-from vger.connection import Connection
+from vger.connection import Connection, DumbConnection
 import re
 import time
 
+
 class Attack:
     def __init__(self, host_or_connection, secret=None):
-        if isinstance(host_or_connection, Connection):
+        if isinstance(host_or_connection, (Connection, DumbConnection)):
             self.connection = host_or_connection
         else:
             self.connection = Connection(host_or_connection, secret)
-    
+
     async def _recv_all(self, conn, timeout):
         while True:
             try:
@@ -34,7 +35,6 @@ class Attack:
                         )
             except:
                 break
-
 
     async def attack_session(self, session, code, silent=True, print_out=True):
         jpy_sess = self.connection.jpy_sessions[session]
@@ -64,10 +64,10 @@ class Attack:
             await conn.send(json.dumps(code_msg))
             return await self._recv_all(conn, timeout=1)
 
-
     async def _send_to_terminal(self, ws, code):
-        await ws.send(json.dumps(["stdin", " " + code + "\n"]))  # space for opsec in some terminals
-
+        await ws.send(
+            json.dumps(["stdin", " " + code + "\n"])
+        )  # space for opsec in some terminals
 
     async def _recv_from_terminal(self, ws):
         while True:
@@ -75,7 +75,6 @@ class Attack:
             data = json.loads(message)
             if len(data) > 1 and data[0] == "stdout":
                 yield f"{data[1]}"
-
 
     async def _run_in_terminal(self, terminal, code, timeout=2, stdout=True):
         ws_base_url = urlparse(self.connection.url)._replace(scheme="ws").geturl()
@@ -97,7 +96,6 @@ class Attack:
             if stdout:
                 return out
 
-
     async def run_ephemeral_terminal(self, code, timeout=2, stdout=True):
         def strip_ansi_codes(text):
             ansi_escape = re.compile(r"(?:\x1b\[|\x9b)[0-?]*[ -/]*[@-~]")
@@ -109,7 +107,6 @@ class Attack:
             result = [strip_ansi_codes(x) for x in result]
             self.connection.print_with_rule("".join(result))
         self.connection.delete_terminal(new_term["name"])
-
 
     async def snoop(self, session, timeout=60):
         jpy_sess = self.connection.jpy_sessions[session]
@@ -124,7 +121,6 @@ class Attack:
         ) as conn:
             await self._recv_all(conn, timeout)
 
-
     def stomp(self, target, payload_str, frequency=60):
         while True:
             try:
@@ -137,4 +133,3 @@ class Attack:
                 time.sleep(frequency)
             except:
                 pass
-

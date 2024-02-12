@@ -1,12 +1,10 @@
 import requests
 from rich.console import Console
-import argparse
 import json
 import urllib.parse
 from typing import Dict
 import rich
 from datetime import datetime
-import fire
 
 
 class Connection:
@@ -24,7 +22,13 @@ class Connection:
         self.model_paths = list()
         self.datasets = list()
         self.jobs = dict()
-        self.first_time_in_menu = {"enumerate": True, "exploit": True, "exploit_attack": True, "persist": True}
+        self.menu = None
+        self.first_time_in_menu = {
+            "enumerate": True,
+            "exploit": True,
+            "exploit_attack": True,
+            "persist": True,
+        }
 
     def print_with_rule(self, text, category="Output", json=False):
         self.con.rule(f"[bold green]{category}")
@@ -87,14 +91,11 @@ class Connection:
         )
 
 
-if __name__ == "__main__":
-    fire.Fire(Connection)
-
-
 class DumbConnection:
     """
     Pickle-serializable Connection for Python process spawning
     """
+
     def __init__(self, socket, secret):
         self.url: str = socket
         self.secret: str = secret

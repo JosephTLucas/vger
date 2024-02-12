@@ -4,25 +4,14 @@ from vger.enumerate import Enumerate
 from vger.exploit import Exploit
 from vger.persist import Persist
 from typing import List, Dict
-from multiprocessing import Process
-import fire
+
 
 class Menu:
-    def __init__(self):
+    def __init__(self, connection: Connection = Connection()):
         self.server: str = None
         self.secret: str = None
         self.sessions: List[str] = list()
-        self.target: str = None
-        self.connection: Connection = Connection()
-        self.model_paths: List[str] = list()
-        self.datasets: List[str] = list()
-        self.jobs: Dict[str, Process] = dict()
-        self.first_time_in_menu: Dict[str, bool] = {
-            "enumerate": True,
-            "exploit": True,
-            "exploit_attack": True,
-            "persist": True,
-        }
+        self.connection: Connection = connection
         self.connection.print_with_rule(
             """
              .                      ,;           
@@ -79,24 +68,25 @@ class Menu:
             )
         ]
         answer = inquirer.prompt(nav_menu)
+        self.connection.menu = self
         match answer["option"]:
             case "Reset":
                 self.__init__()
                 self.main()
             case "Enumerate":
-                self.enumerate()
+                Enumerate(self.connection).enumerate()
                 self.menu()
             case "Exploit":
-                self.exploit()
+                Exploit(self.connection).exploit()
                 self.menu()
             case "Persist":
-                self.persist()
+                Persist(self.connection).persist()
                 self.menu()
             case "Export output":
-                self.export_console()
+                Persist(self.connection).export_console()
                 self.menu()
             case "Quit":
-                for k, v in self.jobs.items():
+                for k, v in self.connection.jobs.items():
                     v.kill()
                 exit()
 
@@ -104,20 +94,6 @@ class Menu:
         self.login()
         self.menu()
 
-def interactive():
-    m = Menu()
-    m.main()
-
-def cli():
-    fire.Fire({
-        "": interactive,
-        "terminal": lambda x: Enumerate().run_in_shell(),
-        "list_notebooks": lambda x: Enumerate().list_notebooks(),
-        "list_dir": lambda x: Enumerate().list_dir(),
-        
-    })
-
 
 if __name__ == "__main__":
-    m = Menu()
-    m.main()
+    Menu().main()
