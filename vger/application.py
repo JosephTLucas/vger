@@ -80,7 +80,7 @@ def file_delete(host: str, secret: str, file_path: str):
 @app.command(rich_help_panel="Server-Level Interactions")
 def backdoor_jupyter(host: str, secret: str, port: int = 7777, new_secret: str = ""):
     """
-    Launch a backdoor Jupyter server [green](it is a code execution service, after all)[/green]
+    Launch your own Jupyter server [green](it is a code execution service, after all)[/green]
     """
     return Persist(host, secret).jupyter_backdoor(
         interactive=False, port=port, secret=new_secret
