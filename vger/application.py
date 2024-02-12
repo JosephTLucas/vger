@@ -7,8 +7,8 @@ import typer
 app = typer.Typer(rich_markup_mode="rich")
 
 
-@app.command()
-def interactive(rich_help_panel="Execution Mode"):
+@app.command(rich_help_panel="Execution Mode")
+def interactive():
     """
     Interactive execution for [bold red]maximum functionality[/bold red]
     """
