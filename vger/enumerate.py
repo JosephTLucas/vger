@@ -4,6 +4,7 @@ from vger.attack import Attack
 from vger.connection import Connection
 import json
 import base64
+import tempfile
 
 
 class Enumerate:
@@ -12,6 +13,11 @@ class Enumerate:
             self.connection = host_or_connection
         else:
             self.connection = Connection(host_or_connection, secret)
+        try:
+            from pyds_sum.summarize import summarizer
+            self.summarizer = summarizer()
+        except ImportError:
+            self.summarizer = None
 
     def enumerate(self):
         if self.connection.first_time_in_menu["enumerate"]:
@@ -114,7 +120,18 @@ class Enumerate:
                 f"{self.connection.jpy_sessions[s]['name']:<20} Last Active: {self.connection.jpy_sessions[s]['kernel']['last_activity']:<30}"
                 for s in self.connection.jpy_sessions
             ]
-            self.connection.print_with_rule("\n".join(printable_sessions))
+            if self.summarizer:
+                summaries = list()
+                for s in self.connection.jpy_sessions:
+                    data = self.connection.list_dir(self.connection.jpy_sessions[s]['path'])["content"]
+                    with tempfile.NamedTemporaryFile(mode='w+', suffix=".ipynb", delete=True) as temp_file:
+                        json.dump(data, temp_file)
+                        temp_file.flush()
+                        summaries.append(self.summarizer.summarize(temp_file.name))
+                for notebook, summary in zip(printable_sessions, summaries):
+                    self.connection.print_with_rule(notebook + "\n" + "\N{ROBOT FACE}" + " AI Summary:\n" + summary)
+            else:
+                self.connection.print_with_rule("\n".join(printable_sessions))
         else:
             self.connection.print_with_rule("No running notebooks")
 
