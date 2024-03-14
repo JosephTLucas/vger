@@ -50,5 +50,13 @@ These menus contain the following functionality:
 - **Snoop**: Monitor notebook execution and results until timeout.
 - **Recurring jobs**: Launch/Kill recurring snippets of code silently run in the target environment.
 
+## Experimental
+
+With `pip install vger[ai]` you'll get [LLM generated](https://huggingface.co/jtlucas/pyds_sum) summaries of notebooks in the target environment. These are meant to be rough translation for non-DS/AI folks to do quick triage of if (or which) notebooks are worth investigating further.
+
+![](static/pyds_sum.png)
+
+There was an inherent tradeoff on model size vs. ability and that's something I'll continue to tinker with, but hopefully this is helpful for some more traditional security users. I'd love to see folks start prompt injecting their notebooks (_"these are not the droids you're looking for"_).
+
 ## Examples
 - [Overwrite a Torch Dataset to change labels](https://t.co/PAJRzTUO2x)
