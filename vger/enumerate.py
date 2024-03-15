@@ -15,6 +15,7 @@ class Enumerate:
             self.connection = Connection(host_or_connection, secret)
         try:
             from pyds_sum.summarize import summarizer
+
             self.summarizer = summarizer()
         except ImportError:
             self.summarizer = None
@@ -123,13 +124,19 @@ class Enumerate:
             if self.summarizer:
                 summaries = list()
                 for s in self.connection.jpy_sessions:
-                    data = self.connection.list_dir(self.connection.jpy_sessions[s]['path'])["content"]
-                    with tempfile.NamedTemporaryFile(mode='w+', suffix=".ipynb", delete=True) as temp_file:
+                    data = self.connection.list_dir(
+                        self.connection.jpy_sessions[s]["path"]
+                    )["content"]
+                    with tempfile.NamedTemporaryFile(
+                        mode="w+", suffix=".ipynb", delete=True
+                    ) as temp_file:
                         json.dump(data, temp_file)
                         temp_file.flush()
                         summaries.append(self.summarizer.summarize(temp_file.name))
                 for notebook, summary in zip(printable_sessions, summaries):
-                    self.connection.print_with_rule(notebook + "\n" + "\N{ROBOT FACE}" + " AI Summary:\n" + summary)
+                    self.connection.print_with_rule(
+                        notebook + "\n" + "\N{ROBOT FACE}" + " AI Summary:\n" + summary
+                    )
             else:
                 self.connection.print_with_rule("\n".join(printable_sessions))
         else:
@@ -171,7 +178,7 @@ class Enumerate:
                     file["type"] == "file"
                     and file["name"].split(".")[-1].lower() in file_extensions
                 ):
-                    self.connection.print_with_rule(f"Found {file["path"]}")
+                    self.connection.print_with_rule(f"Found {file['path']}")
                     tracker.append(file["path"])
                 else:
                     pass
