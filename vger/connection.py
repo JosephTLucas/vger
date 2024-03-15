@@ -39,7 +39,7 @@ class Connection:
                 self.con.print(text)
             except rich.errors.MarkupError:
                 print(text)
-        self.con.rule(f"[bold green]{datetime.now().strftime("%c")}")
+        self.con.rule(f"[bold green]{datetime.now().strftime('%c')}")
 
     def get(self, path="api/contents"):
         return self.session.get(self.url + path).json()
