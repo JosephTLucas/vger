@@ -50,7 +50,7 @@ class Attack:
         ws_base_url = urlparse(self.connection.url)._replace(scheme="ws").geturl()
         ws_url = (
             ws_base_url
-            + f'api/kernels/{jpy_sess['kernel']['id']}/channels?session_id={jpy_sess['id']}'
+            + f"api/kernels/{jpy_sess['kernel']['id']}/channels?session_id={jpy_sess['id']}"
         )
         async with connect(
             ws_url, extra_headers=self.connection.headers, close_timeout=5
@@ -113,7 +113,7 @@ class Attack:
         ws_base_url = urlparse(self.connection.url)._replace(scheme="ws").geturl()
         ws_url = (
             ws_base_url
-            + f'api/kernels/{jpy_sess['kernel']['id']}/channels?session_id={jpy_sess['id']}'
+            + f"api/kernels/{jpy_sess['kernel']['id']}/channels?session_id={jpy_sess['id']}"
         )
 
         async with connect(
