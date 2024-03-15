@@ -119,7 +119,7 @@ class Persist:
             )
         ]
         answer = inquirer.prompt(answer)
-        log_path = f"{answer["path"]}vger-{time.strftime("%Y%m%d-%H%M%S")}.log"
+        log_path = f"{answer['path']}vger-{time.strftime('%Y%m%d-%H%M%S')}.log"
         try:
             self.connection.con.save_text(log_path)
         except PermissionError:
