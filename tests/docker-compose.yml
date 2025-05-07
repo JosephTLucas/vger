@@ -1,0 +1,10 @@
+version: '3.8'
+services:
+  jupyterlab:
+    image: jupyter/base-notebook:latest
+    ports:
+      - "18888:8888" # Use a different port to avoid conflict with local dev
+    environment:
+      - JUPYTER_TOKEN=vgeristesting
+      - JUPYTER_ENABLE_LAB=yes
+    command: "start-notebook.sh --NotebookApp.token='${JUPYTER_TOKEN}' --NotebookApp.password=''" 
